@@ -1,0 +1,2 @@
+# Netlify: serve the single-page app for any /room/XXXXXX link.
+/room/*  /index.html  200

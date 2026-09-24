@@ -1,0 +1,16 @@
+-- Backup: Phase 1 close (2026-09-25)
+-- Snapshot of the schema state as applied to the live Supabase project
+-- (uno-game, ref asjxgsaxdngbqjzcxoxn). This is the exact combined content
+-- of every migration in backend/supabase/migrations/ up to this phase close.
+-- Applied migration versions on the server at this point:
+--   20260924165834  phase1_room_system
+--   20260924165844  phase1_enable_realtime
+--   20260924165904  phase1_fix_search_path
+--
+-- To restore from scratch: run backend/supabase/migrations/*.sql in order
+-- in a fresh Supabase project's SQL editor.
+
+-- (see backend/supabase/migrations/0001_phase1_room_system.sql
+--  and 0002_phase1_enable_realtime.sql for the full statements —
+--  duplicated here is intentionally avoided so there's one source of
+--  truth; this file just records which versions were live at phase close.)

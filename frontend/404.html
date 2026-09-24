@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#090715" />
+<title>UNO Table</title>
+<meta name="description" content="Create a room, share the link, and play UNO with friends." />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%23090715'/%3E%3Cpath d='M17 19h30v26H17z' fill='none' stroke='%2350e6ff' stroke-width='4'/%3E%3Cpath d='M24 32h16' stroke='%23ff54bd' stroke-width='4'/%3E%3C/svg%3E" />
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <div class="scene">
+    <div class="noise" aria-hidden="true"></div>
+
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark" aria-hidden="true"></span>UNO TABLE</div>
+      <button class="quiet-button" id="motion-toggle" aria-pressed="false">Reduce motion</button>
+    </header>
+
+    <main class="app">
+
+      <!-- ============================= HOME VIEW =============================
+           Create a room, or join one by code. This is what a visitor sees
+           when they land on the site with no room code in the URL. -->
+      <section id="view-home" class="view">
+        <h1>UNO Table</h1>
+        <p class="subtitle">Play UNO online with friends</p>
+
+        <div class="card">
+          <h2>Create a room</h2>
+          <label for="create-name">Your name</label>
+          <input id="create-name" type="text" maxlength="20" placeholder="e.g. Alex" />
+          <button id="btn-create-room" class="btn btn-primary">Create Room</button>
+        </div>
+
+        <div class="card">
+          <h2>Join a room</h2>
+          <label for="join-name">Your name</label>
+          <input id="join-name" type="text" maxlength="20" placeholder="e.g. Alex" />
+          <label for="join-code">Room code</label>
+          <input id="join-code" type="text" maxlength="6" placeholder="e.g. ABC123" autocapitalize="characters" />
+          <button id="btn-join-room" class="btn btn-secondary">Join Room</button>
+        </div>
+
+        <p id="home-error" class="error-message" hidden></p>
+      </section>
+
+      <!-- ============================= LOBBY VIEW =============================
+           Shown after creating or joining a room. Lists everyone currently
+           in the room and updates live as people join. -->
+      <section id="view-lobby" class="view" hidden>
+        <h1>Lobby</h1>
+        <div class="status"><span class="status-dot" aria-hidden="true"></span><span id="lobby-status">Waiting for players&hellip;</span></div>
+
+        <div class="card">
+          <p class="label">Room code</p>
+          <p id="lobby-code" class="room-code"></p>
+          <button id="btn-copy-link" class="btn btn-secondary">Copy invite link</button>
+          <p id="copy-feedback" class="hint" hidden>Link copied!</p>
+        </div>
+
+        <div class="card">
+          <p class="label"><span id="player-count">0</span>/<span id="player-max">8</span> players</p>
+          <ul id="player-list" class="player-list"></ul>
+        </div>
+
+        <p class="hint">Waiting for the host to start the game&hellip; (coming in a later phase)</p>
+        <button id="btn-leave-room" class="btn btn-text">Leave room</button>
+      </section>
+
+      <!-- ============================= ERROR VIEW =============================
+           Shown for a bad/expired room link, instead of a blank or stuck
+           screen. Always offers a way back to the home page. -->
+      <section id="view-error" class="view" hidden>
+        <h1>Something's not right</h1>
+        <p id="error-message" class="error-message"></p>
+        <a href="/" class="btn btn-primary">Back to home</a>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Supabase client library, vendored locally (v2.117.1) so the app
+       doesn't depend on a CDN being reachable at runtime. -->
+  <script src="vendor/supabase.js"></script>
+  <script src="js/motion.js"></script>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

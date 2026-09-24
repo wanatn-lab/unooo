@@ -1,0 +1,311 @@
+/* ===========================================================================
+   "404: Afterparty Not Found" theme — dark neon lobby look, adopted from
+   the design reference the client sent (assets/afterparty-club.webp +
+   assets/avatars/*.webp). Animation is intentional here (client approved
+   it explicitly) — everything respects prefers-reduced-motion AND a manual
+   "Reduce motion" toggle (#motion-toggle in index.html, wired in motion.js),
+   same escape hatch the reference design had.
+   =========================================================================== */
+
+:root {
+  --void: #090715;
+  --ink: #f8f7ff;
+  --muted: #b6b0cd;
+  --cyan: #53e5ff;
+  --pink: #ff56bc;
+  --violet: #9b6dff;
+  --lime: #d9ff52;
+  --amber: #ffb55d;
+  --glass: rgba(17, 12, 41, .68);
+  --line: rgba(213, 204, 255, .2);
+  --radius: 16px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-width: 320px;
+  color: var(--ink);
+  background: var(--void);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  overflow-x: hidden;
+}
+
+button { font: inherit; }
+
+/* ---- animated backdrop (club photo + scanlines + film noise) ---- */
+.scene {
+  min-height: 100vh;
+  position: relative;
+  isolation: isolate;
+  padding: 20px clamp(16px, 4vw, 40px) 40px;
+  overflow-x: hidden;
+}
+
+.scene::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -3;
+  background:
+    linear-gradient(100deg, rgba(5, 3, 19, .94) 5%, rgba(5, 3, 20, .74) 52%, rgba(5, 3, 18, .88)),
+    url('../assets/afterparty-club.webp') center/cover;
+  animation: scene-breathe 10s ease-in-out infinite;
+}
+
+.scene::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  opacity: .38;
+  pointer-events: none;
+  background: repeating-linear-gradient(0deg, transparent 0 4px, rgba(94, 239, 255, .035) 5px 6px);
+  mix-blend-mode: screen;
+}
+
+.noise {
+  position: fixed;
+  inset: -20%;
+  z-index: -1;
+  opacity: .1;
+  pointer-events: none;
+  background-image: radial-gradient(rgba(255, 255, 255, .9) .6px, transparent .7px);
+  background-size: 7px 7px;
+  animation: noise .24s steps(2) infinite;
+}
+
+/* ---- top bar ---- */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  max-width: 620px;
+  margin: 0 auto 28px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  letter-spacing: .06em;
+  font-weight: 850;
+  font-size: .85rem;
+}
+
+.brand-mark {
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--cyan);
+  border-radius: 9px;
+  position: relative;
+  box-shadow: 0 0 20px rgba(83, 229, 255, .35);
+  flex: none;
+}
+.brand-mark::before, .brand-mark::after { content: ""; position: absolute; background: var(--pink); }
+.brand-mark::before { width: 14px; height: 2px; left: 7px; top: 10px; }
+.brand-mark::after { width: 9px; height: 2px; left: 7px; top: 16px; background: var(--cyan); }
+
+.quiet-button {
+  border: 1px solid var(--line);
+  color: var(--ink);
+  background: rgba(9, 7, 21, .5);
+  border-radius: 999px;
+  padding: 8px 13px;
+  font-size: .78rem;
+  cursor: pointer;
+  transition: .2s ease;
+}
+.quiet-button:hover { border-color: var(--cyan); background: rgba(83, 229, 255, .1); }
+
+/* ---- shared layout ---- */
+.app { max-width: 520px; margin: 0 auto; }
+
+h1 {
+  font-size: clamp(2rem, 7vw, 2.6rem);
+  letter-spacing: -.03em;
+  line-height: 1.05;
+  margin: 0 0 4px;
+  text-shadow: 0 0 28px rgba(157, 107, 255, .3);
+}
+
+.subtitle { color: var(--muted); margin: 0 0 22px; }
+
+.card {
+  background: linear-gradient(135deg, rgba(25, 18, 56, .8), rgba(7, 7, 25, .68));
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: clamp(16px, 3vw, 22px);
+  margin-bottom: 16px;
+  box-shadow: 0 20px 70px rgba(0, 0, 0, .3), inset 0 1px rgba(255, 255, 255, .08);
+  backdrop-filter: blur(12px);
+}
+
+h2 { font-size: 1.02rem; margin: 0 0 12px; letter-spacing: -.01em; }
+
+label {
+  display: block;
+  font-size: .82rem;
+  color: var(--muted);
+  margin: 10px 0 4px;
+}
+
+input[type="text"] {
+  width: 100%;
+  padding: 11px 13px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: rgba(9, 7, 21, .55);
+  color: var(--ink);
+  font-size: 1rem;
+}
+input[type="text"]:focus-visible { outline: 2px solid var(--cyan); outline-offset: 1px; }
+
+.btn {
+  display: block;
+  width: 100%;
+  margin-top: 14px;
+  padding: 13px;
+  border: 0;
+  border-radius: 14px;
+  font-size: 1rem;
+  font-weight: 800;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform .2s ease, filter .2s ease;
+}
+.btn:active { transform: translateY(1px) scale(.99); }
+
+.btn-primary {
+  color: #0b0717;
+  background: linear-gradient(90deg, var(--cyan), #a4f0ff 47%, var(--lime));
+  box-shadow: 0 8px 26px rgba(83, 229, 255, .28);
+}
+.btn-primary:hover { transform: translateY(-2px); filter: saturate(1.15); }
+
+.btn-secondary {
+  color: var(--ink);
+  background: rgba(155, 109, 255, .18);
+  border: 1px solid var(--violet);
+}
+.btn-secondary:hover { background: rgba(155, 109, 255, .3); }
+
+.btn-text {
+  background: none;
+  color: var(--muted);
+  text-decoration: underline;
+}
+
+.error-message {
+  color: #ffb3d3;
+  background: rgba(255, 86, 188, .12);
+  border: 1px solid rgba(255, 86, 188, .35);
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-top: 12px;
+}
+
+.label { color: var(--muted); font-size: .82rem; margin: 0 0 4px; }
+
+.room-code {
+  font: 800 2.1rem ui-monospace, SFMono-Regular, Consolas, monospace;
+  letter-spacing: .12em;
+  margin: 0 0 12px;
+  color: var(--ink);
+  text-shadow: 0 0 18px rgba(83, 229, 255, .35);
+}
+
+.hint { color: var(--muted); font-size: .84rem; text-align: center; }
+
+/* ---- live status dot (used for "N players online") ---- */
+.status { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: .85rem; margin: 0 0 4px; }
+.status-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--lime); box-shadow: 0 0 12px var(--lime);
+  animation: pulse 1.7s ease-in-out infinite;
+  flex: none;
+}
+
+/* ---- player list, styled like the reference's "echo" picker cards,
+   minus the click-to-select interaction (Phase 1 has no character pick
+   yet — each joined player just gets a decorative avatar) ---- */
+.player-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 10px;
+}
+
+.player-tile {
+  --glow: var(--cyan);
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(222, 218, 255, .16);
+  border-radius: 14px;
+  padding: 10px 10px 44px;
+  min-height: 96px;
+  background: linear-gradient(145deg, rgba(255, 255, 255, .08), rgba(255, 255, 255, .02));
+}
+
+.player-tile .avatar {
+  position: absolute;
+  right: -4px;
+  bottom: -2px;
+  width: 62px;
+  height: 82px;
+  object-fit: contain;
+  object-position: bottom right;
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--glow) 45%, transparent));
+  animation: float 4.6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.player-tile b {
+  position: relative;
+  z-index: 1;
+  display: block;
+  max-width: 62%;
+  font-size: .82rem;
+}
+
+.player-tile .host-tag {
+  position: relative;
+  z-index: 1;
+  display: inline-block;
+  margin-top: 4px;
+  font: 800 .62rem/1 ui-monospace, monospace;
+  color: var(--void);
+  background: var(--glow);
+  padding: 3px 5px;
+  border-radius: 4px;
+}
+
+.view[hidden] { display: none; }
+
+/* ---- animations ---- */
+@keyframes scene-breathe { 50% { transform: scale(1.02); filter: saturate(1.1) brightness(1.06); } }
+@keyframes noise { 50% { transform: translate(4%, 2%); } }
+@keyframes float { 50% { translate: 0 -5px; filter: brightness(1.25); } }
+@keyframes pulse { 50% { transform: scale(1.35); opacity: .55; } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+}
+
+/* Manual override, same escape hatch as the reference design (button
+   wired in js/motion.js) */
+body.reduce-motion *, body.reduce-motion *::before, body.reduce-motion *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
+@media (max-width: 380px) {
+  .app { padding: 0 2px; }
+  .room-code { font-size: 1.6rem; }
+  .player-list { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); }
+}
