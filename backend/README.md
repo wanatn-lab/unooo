@@ -11,7 +11,7 @@ Supabase: a Postgres database, two RPC functions, and Realtime.
 
 ## Schema
 
-See schema history in supabase/migrations/. Migrations 0001–0004 are deployed; migration 0005 replaces the Auth-dependent approach with per-seat capability tokens.
+See schema history in supabase/migrations/. Migrations 0001–0005 are deployed; migration 0005 uses per-seat capability tokens instead of Supabase Auth.
 
 - **rooms** — `id, code (unique), status, max_players, created_at`
 - **players** — `id, room_id, name, is_host, joined_at`
@@ -21,8 +21,8 @@ See schema history in supabase/migrations/. Migrations 0001–0004 are deployed;
   adds the player, atomically. This is the *only* way to add a player;
   direct `insert`s into `players` are blocked by Row Level Security so the
   8-player cap can't be bypassed from the client.
-- Realtime is enabled on `rooms` and `players` so the frontend can subscribe
-  to player join/leave events live.
+- Realtime publication remains enabled, but the frontend polls a token-protected
+  roster RPC so player rows are not exposed through changefeeds.
 
 ## Why RPC functions instead of plain inserts?
 

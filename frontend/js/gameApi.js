@@ -143,7 +143,7 @@ export async function getGamePlayers(gameId) {
   return data;
 }
 
-/** Reads only the authenticated player's own hand via the protected RPC. */
+/** Reads only the token holder's own hand via the protected RPC. */
 export async function getHand(gameId, playerId) {
   const { data, error } = await supabase.rpc("get_my_hand", {
     p_game_id: gameId,

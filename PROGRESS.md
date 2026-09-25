@@ -1,11 +1,12 @@
-สถานะงานต่อเนื่อง (2026-09-25): กำลังแก้ identity/RLS โดยไม่พึ่ง Anonymous
-Auth ซึ่งปิดอยู่บนโปรเจกต์ Supabase. เตรียม migration 0005 แบบ per-seat
-capability token: สุ่ม token 256-bit ต่อแท็บ, เก็บเฉพาะ SHA-256 ใน DB, และบังคับ
-ตรวจ token ผ่าน RPC; ปิดการอ่านตารางโดยตรงและใช้ polling สำหรับ lobby.
-การเปลี่ยนแปลงยังไม่ deploy/push จนกว่าจะตรวจ SQL, client และ RPC จริงครบ.
+สถานะงานต่อเนื่อง (2026-09-25): Phase 3 security deploy แล้ว โดยไม่ต้องเปิด
+Anonymous Auth. Migration 0005 ใช้ per-seat capability token แบบสุ่ม 256-bit,
+เก็บเฉพาะ SHA-256 ใน DB, ปิด direct table access และเปลี่ยน lobby เป็น polling.
+ทดสอบ public API แล้ว: join ห้องที่ไม่มีถูกปฏิเสธ, token ผิดถูกปฏิเสธ,
+อ่าน players โดยตรงถูกปฏิเสธ และ invite lookup ตอบได้; ตาราง production ยังว่าง.
+Commit a0d0b41 ถูก push ไป origin/main แล้ว. ยังไม่ได้ยืนยัน happy-path create/join
+ผ่าน browser UI; ต้องทำ smoke test ก่อนเปิดเล่นจริง.
 
-โค้ดเฟส 2 ถูก push แล้วที่ commit 65c1e76 และ tag phase-2-complete.
-เฟสที่ทำล่าสุด: เฟส 2 - Game Logic
+โค้ดเฟส 2 ถูก push แล้วที่ commit 65c1e76 และ tag phase-2-complete.เฟสที่ทำล่าสุด: เฟส 2 - Game Logic
 สถานะ: ปิดเฟสแล้ว (2026-09-25) — แต่ "ปิดเฟส" ในที่นี้หมายถึงโค้ด+เทสเสร็จและ
 พร้อมให้ push เท่านั้น รอบนี้ผู้ใช้ (project owner) ให้ agent อีกตัว (Codex)
 เป็นคน commit/push ขึ้น GitHub และติด tag `phase-2-complete` เอง — งานฝั่งนี้
@@ -87,8 +88,12 @@ capability token: สุ่ม token 256-bit ต่อแท็บ, เก็บ
 - ยังไม่มีระบบลบ/ดึงผู้เล่นออกจากเกมกลางคัน (ถ้าผู้เล่นออกจากห้องจริงๆ ไม่ใช่
   แค่ disconnect ชั่วคราว ระบบนี้ยังไม่รองรับ มีแต่กรณี "หายไปชั่วคราวแล้วบอท
   เล่นแทน")
-- ช่องโหว่การอ่านมือไพ่/ปลอม player_id กำลังแก้ด้วย migration 0005 และ per-seat capability token; ยังต้องตรวจ RPC จริงก่อน deploy/push.
-
+- Security phase 3: migration 0005 deploy แล้วและโค้ดอยู่บน main. Security advisor
+  ยังรายงาน anon-executable SECURITY DEFINER RPCs ซึ่งตั้งใจเปิดเป็น API และตรวจ
+  capability token ภายใน; มี RLS-no-policy INFO เพราะ direct privileges ถูกถอน.
+- ยังต้อง smoke-test create/join และ roster ใน browser จริง; production DB ยังไม่มี
+  room/player/game data จากการทดสอบ. Room-creation rate limiting และ XSS prevention
+  เป็น hardening follow-up.
 ไฟล์หลักที่แก้/เพิ่ม:
 - /PROGRESS.md (ไฟล์นี้)
 - /backend/README.md (เพิ่มหัวข้อ "Phase 2: game logic")
@@ -97,6 +102,6 @@ capability token: สุ่ม token 256-bit ต่อแท็บ, เก็บ
 - /backend/supabase/tests/phase2_game_logic.test.sql (ใหม่ — ชุดทดสอบ 11 กลุ่ม)
 - /frontend/js/gameApi.js (ใหม่)
 - /backups/2026-09-25_phase2/schema_snapshot.sql, config_snapshot.md (ใหม่)
-- /backend/supabase/migrations/0005_phase3_capability_security.sql (เตรียมไว้; ยังไม่ deploy)
+- /backend/supabase/migrations/0005_phase3_capability_security.sql (deploy แล้ว)
 
-ขั้นตอนถัดไป: ตรวจ migration 0005, ทดสอบ create/join แบบไม่ใช้ Auth, การปฏิเสธ token ผิด และ game RPC ก่อน deploy/commit/push.
+ขั้นตอนถัดไป: smoke-test create/join และ lobby ผ่าน browser จริง; จากนั้นทำ rate limiting และ XSS hardening.
