@@ -778,3 +778,18 @@ grant execute on function pass_turn(uuid, uuid) to anon;
 grant execute on function call_uno(uuid, uuid) to anon;
 grant execute on function catch_uno_failure(uuid, uuid, uuid) to anon;
 grant execute on function heartbeat(uuid, uuid) to anon;
+
+-- PostgreSQL grants EXECUTE on new functions to PUBLIC by default. Keep
+-- the internal implementation helpers private so anonymous API clients
+-- cannot bypass the validation in the public entry points above.
+revoke execute on function _generate_deck() from public, anon, authenticated;
+revoke execute on function _shuffle(jsonb) from public, anon, authenticated;
+revoke execute on function _draw_n_cards(jsonb, jsonb, int) from public, anon, authenticated;
+revoke execute on function _card_matches(jsonb, text, jsonb) from public, anon, authenticated;
+revoke execute on function _first_valid_card(jsonb, jsonb, text) from public, anon, authenticated;
+revoke execute on function _jsonb_array_index_of(jsonb, jsonb) from public, anon, authenticated;
+revoke execute on function _sweep_and_run_bots(uuid) from public, anon, authenticated;
+revoke execute on function _bot_take_turn(uuid) from public, anon, authenticated;
+revoke execute on function _step_seat(int, int, int, int) from public, anon, authenticated;
+revoke execute on function _apply_play_card(uuid, uuid, jsonb, text, boolean) from public, anon, authenticated;
+revoke execute on function _apply_draw_and_pass(uuid, uuid) from public, anon, authenticated;
