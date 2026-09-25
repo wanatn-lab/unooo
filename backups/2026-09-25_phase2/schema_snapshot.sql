@@ -1127,4 +1127,3 @@ CREATE POLICY "rooms are publicly readable" ON public.rooms FOR SELECT USING (tr
 --
 
 \unrestrict dl6HSwvhhD9ALHzXCKg73X2eJAf0QB5XAaJ2DnHtPmznURrN82XYusfZnAwuNaa
-
