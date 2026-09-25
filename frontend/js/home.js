@@ -33,8 +33,8 @@ export function initHomeView(onEnterRoom, prefillCode) {
     if (!name) return showError("Please enter your name.");
 
     try {
-      const { roomId, code, playerId } = await createRoom(name);
-      saveSession({ roomId, code, playerId, name });
+      const { roomId, code, playerId, accessToken } = await createRoom(name);
+      saveSession({ roomId, code, playerId, name, accessToken });
       onEnterRoom(roomId, code, playerId, name);
     } catch (err) {
       showError(err.message);
@@ -50,8 +50,8 @@ export function initHomeView(onEnterRoom, prefillCode) {
     if (!/^[A-Z0-9]{6}$/.test(code)) return showError("Room codes are 6 characters, e.g. ABC123.");
 
     try {
-      const { roomId, playerId } = await joinRoom(code, name);
-      saveSession({ roomId, code, playerId, name });
+      const { roomId, playerId, accessToken } = await joinRoom(code, name);
+      saveSession({ roomId, code, playerId, name, accessToken });
       onEnterRoom(roomId, code, playerId, name);
     } catch (err) {
       showError(err.message);

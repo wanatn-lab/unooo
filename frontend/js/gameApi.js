@@ -17,12 +17,12 @@
 //   { color: "red" | "yellow" | "green" | "blue" | "wild",
 //     value: "0".."9" | "skip" | "reverse" | "draw2" | "wild" | "wild4" }
 // ---------------------------------------------------------------------------
-import { supabase } from "./supabaseClient.js";
+import { supabase, getAccessToken } from "./supabaseClient.js";
 
 /** Starts the game for a room. Only the host may call this. */
 export async function startGame(roomId, playerId) {
   const { data, error } = await supabase
-    .rpc("start_game", { p_room_id: roomId, p_player_id: playerId })
+    .rpc("start_game", { p_room_id: roomId, p_player_id: playerId, p_access_token: getAccessToken() })
     .single();
 
   if (error) {
@@ -51,6 +51,7 @@ export async function playCard(gameId, playerId, card, { chosenColor = null, dec
     .rpc("play_card", {
       p_game_id: gameId,
       p_player_id: playerId,
+      p_access_token: getAccessToken(),
       p_card: card,
       p_chosen_color: chosenColor,
       p_declare_uno: declareUno,
@@ -69,7 +70,7 @@ export async function playCard(gameId, playerId, card, { chosenColor = null, dec
  */
 export async function drawCard(gameId, playerId) {
   const { data, error } = await supabase
-    .rpc("draw_card", { p_game_id: gameId, p_player_id: playerId })
+    .rpc("draw_card", { p_game_id: gameId, p_player_id: playerId, p_access_token: getAccessToken() })
     .single();
 
   if (error) throw new Error(mapGameError(error.message));
@@ -79,7 +80,7 @@ export async function drawCard(gameId, playerId) {
 /** Ends the current player's turn after a draw they didn't/couldn't play. */
 export async function passTurn(gameId, playerId) {
   const { data, error } = await supabase
-    .rpc("pass_turn", { p_game_id: gameId, p_player_id: playerId })
+    .rpc("pass_turn", { p_game_id: gameId, p_player_id: playerId, p_access_token: getAccessToken() })
     .single();
 
   if (error) throw new Error(mapGameError(error.message));
@@ -89,7 +90,7 @@ export async function passTurn(gameId, playerId) {
 /** Declares "UNO" for the calling player's own one-card hand. */
 export async function callUno(gameId, playerId) {
   const { data, error } = await supabase
-    .rpc("call_uno", { p_game_id: gameId, p_player_id: playerId })
+    .rpc("call_uno", { p_game_id: gameId, p_player_id: playerId, p_access_token: getAccessToken() })
     .single();
 
   if (error) throw new Error(mapGameError(error.message));
@@ -102,7 +103,7 @@ export async function callUno(gameId, playerId) {
  */
 export async function catchUnoFailure(gameId, accuserId, targetId) {
   const { data, error } = await supabase
-    .rpc("catch_uno_failure", { p_game_id: gameId, p_accuser_id: accuserId, p_target_id: targetId })
+    .rpc("catch_uno_failure", { p_game_id: gameId, p_accuser_id: accuserId, p_target_id: targetId, p_access_token: getAccessToken() })
     .single();
 
   if (error) throw new Error(mapGameError(error.message));
@@ -117,7 +118,7 @@ export async function catchUnoFailure(gameId, accuserId, targetId) {
  */
 export async function heartbeat(gameId, playerId) {
   const { data, error } = await supabase
-    .rpc("heartbeat", { p_game_id: gameId, p_player_id: playerId })
+    .rpc("heartbeat", { p_game_id: gameId, p_player_id: playerId, p_access_token: getAccessToken() })
     .single();
 
   if (error) throw new Error(mapGameError(error.message));
@@ -127,10 +128,7 @@ export async function heartbeat(gameId, playerId) {
 /** Reads the current game row (deck/discard counts, turn, direction, etc). */
 export async function getGame(gameId) {
   const { data, error } = await supabase
-    .from("games")
-    .select("id, room_id, status, direction, current_color, turn_player_id, winner_id, config")
-    .eq("id", gameId)
-    .maybeSingle();
+    .rpc("get_game_state", { p_game_id: gameId, p_access_token: getAccessToken() }).maybeSingle();
 
   if (error) throw new Error("Could not load the game.");
   return data;
@@ -139,33 +137,22 @@ export async function getGame(gameId) {
 /** Reads every player's public game state (NOT hands — see getMyHand). */
 export async function getGamePlayers(gameId) {
   const { data, error } = await supabase
-    .from("game_players")
-    .select("player_id, seat_order, said_uno, is_bot, connected")
-    .eq("game_id", gameId)
-    .order("seat_order", { ascending: true });
+    .rpc("get_game_players", { p_game_id: gameId, p_access_token: getAccessToken() });
 
   if (error) throw new Error("Could not load the players.");
   return data;
 }
 
-/**
- * Reads one player's own hand. NOTE: Phase 2 has no auth yet (same as
- * Phase 1), so this relies on the anon RLS policy that makes
- * game_players readable by anyone — meaning any client can currently
- * read any hand if it knows the player_id. That's an accepted, tracked
- * gap (see PROGRESS.md) until an auth phase locks it down; do not treat
- * this as a security boundary yet.
- */
+/** Reads only the authenticated player's own hand via the protected RPC. */
 export async function getHand(gameId, playerId) {
-  const { data, error } = await supabase
-    .from("game_players")
-    .select("hand")
-    .eq("game_id", gameId)
-    .eq("player_id", playerId)
-    .maybeSingle();
+  const { data, error } = await supabase.rpc("get_my_hand", {
+    p_game_id: gameId,
+    p_player_id: playerId,
+      p_access_token: getAccessToken(),
+  });
 
   if (error) throw new Error("Could not load your hand.");
-  return data?.hand ?? [];
+  return data ?? [];
 }
 
 /** Human-readable text for every error code the Phase 2 RPCs can raise. */

@@ -5,7 +5,7 @@
 // ---------------------------------------------------------------------------
 import { getRoomCodeFromUrl } from "./router.js";
 import { getSession } from "./session.js";
-import { getRoomByCode, getPlayers } from "./roomApi.js";
+import { getRoomByCode } from "./roomApi.js";
 import { initHomeView } from "./home.js";
 import { initLobbyView, teardownLobbyView } from "./lobby.js";
 import { CONFIG } from "./config.js";
@@ -60,8 +60,7 @@ async function boot() {
       return;
     }
 
-    const players = await getPlayers(room.id);
-    if (players.length >= (room.max_players || CONFIG.MAX_PLAYERS_PER_ROOM)) {
+    if (room.player_count >= (room.max_players || CONFIG.MAX_PLAYERS_PER_ROOM)) {
       showErrorView(`This room is full (max ${room.max_players} players).`);
       return;
     }

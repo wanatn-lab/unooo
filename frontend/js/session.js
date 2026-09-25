@@ -1,14 +1,12 @@
 // ---------------------------------------------------------------------------
-// Remembers "who am I in this room" in sessionStorage, so refreshing the
-// lobby page (or clicking the shared link again on the same tab) doesn't
-// make the player join a second time as a duplicate entry.
-// sessionStorage is per-tab, which is what we want: opening the link in a
-// second tab/browser correctly joins as a separate player.
+// Remembers this tab's seat and its unguessable bearer capability token.
+// sessionStorage keeps a new tab/browser as a separate room participant.
 // ---------------------------------------------------------------------------
 const KEY = "uno_session";
 
-export function saveSession({ roomId, code, playerId, name }) {
-  sessionStorage.setItem(KEY, JSON.stringify({ roomId, code, playerId, name }));
+export function saveSession({ roomId, code, playerId, name, accessToken }) {
+  sessionStorage.setItem(KEY, JSON.stringify({ roomId, code, playerId, name, accessToken }));
+  sessionStorage.removeItem("uno_pending_access_token");
 }
 
 export function getSession() {
@@ -21,4 +19,5 @@ export function getSession() {
 
 export function clearSession() {
   sessionStorage.removeItem(KEY);
+  sessionStorage.removeItem("uno_pending_access_token");
 }

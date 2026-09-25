@@ -1,3 +1,10 @@
+สถานะงานต่อเนื่อง (2026-09-25): กำลังแก้ identity/RLS โดยไม่พึ่ง Anonymous
+Auth ซึ่งปิดอยู่บนโปรเจกต์ Supabase. เตรียม migration 0005 แบบ per-seat
+capability token: สุ่ม token 256-bit ต่อแท็บ, เก็บเฉพาะ SHA-256 ใน DB, และบังคับ
+ตรวจ token ผ่าน RPC; ปิดการอ่านตารางโดยตรงและใช้ polling สำหรับ lobby.
+การเปลี่ยนแปลงยังไม่ deploy/push จนกว่าจะตรวจ SQL, client และ RPC จริงครบ.
+
+โค้ดเฟส 2 ถูก push แล้วที่ commit 65c1e76 และ tag phase-2-complete.
 เฟสที่ทำล่าสุด: เฟส 2 - Game Logic
 สถานะ: ปิดเฟสแล้ว (2026-09-25) — แต่ "ปิดเฟส" ในที่นี้หมายถึงโค้ด+เทสเสร็จและ
 พร้อมให้ push เท่านั้น รอบนี้ผู้ใช้ (project owner) ให้ agent อีกตัว (Codex)
@@ -58,10 +65,9 @@
   ไฟล์เดียวกันเป๊ะๆ กับที่จะรันบน Supabase จริง (0001, 0003, 0004) จากนั้นรัน
   ชุดทดสอบกับฐานข้อมูลนั้น — เป็น Postgres เวอร์ชันเดียวกับที่ Supabase ใช้
   จริง (16) ดังนั้นพฤติกรรม SQL/plpgsql ที่ทดสอบผ่านควรตรงกับของจริง แต่
-  **ยังไม่ได้ยืนยันว่า deploy ขึ้น Supabase โปรเจกต์จริงแล้วทำงานถูกต้อง** —
-  ต้องรัน migration 0003 และ 0004 บน Supabase SQL editor จริงก่อน แล้วลอง
-  เล่นจริงอย่างน้อย 1 เกมเต็มๆ (มีขั้นตอนอยู่ใน `backend/README.md` หัวข้อ
-  "Testing this phase")
+  **ยืนยันแล้วว่า migration เฟส 2 (0003/0004) ถูก deploy บน Supabase โปรเจกต์จริง**
+  (Postgres 17.6) และ backend migrations ถูกบันทึกไว้ใน project history; ยังขาด
+  การทดสอบเกมเต็มรูปแบบผ่าน UI จริง.
 - ยังไม่ได้ทดสอบร่วมกับ Supabase Realtime เลย (เฟส 3 ถึงจะทำ sync ระหว่างเล่น)
   ตอนนี้การเดินไพ่ทุกครั้งต้อง refresh/poll เอาข้อมูลใหม่เอง ยังไม่มีการ
   broadcast อัตโนมัติเหมือนที่ lobby ทำได้ในเฟส 1
@@ -81,13 +87,7 @@
 - ยังไม่มีระบบลบ/ดึงผู้เล่นออกจากเกมกลางคัน (ถ้าผู้เล่นออกจากห้องจริงๆ ไม่ใช่
   แค่ disconnect ชั่วคราว ระบบนี้ยังไม่รองรับ มีแต่กรณี "หายไปชั่วคราวแล้วบอท
   เล่นแทน")
-- ยังไม่มี auth เหมือนเฟส 1 (RLS ยังเปิดกว้างสำหรับ anon) — หมายความว่าตอนนี้
-  ใครก็ตามที่รู้ game_id/player_id ของคนอื่น เรียกดูมือไพ่คนอื่นได้ทางเทคนิค
-  (ผ่าน getHand ใน gameApi.js) มีคอมเมนต์เตือนไว้ในโค้ดแล้วว่าเป็นช่องโหว่ที่
-  รู้ตัวและรอเฟส auth มาปิด
-- ยังไม่ได้ push/commit ขึ้น GitHub และยังไม่ได้ติด tag `phase-2-complete` —
-  ตามคำสั่งของผู้ใช้ในรอบนี้ที่ให้ agent อื่น (Codex) เป็นคน push แทน ไฟล์ทั้ง
-  หมดอยู่ใน working directory ของ repo ที่ clone มา พร้อม push ได้ทันที
+- ช่องโหว่การอ่านมือไพ่/ปลอม player_id กำลังแก้ด้วย migration 0005 และ per-seat capability token; ยังต้องตรวจ RPC จริงก่อน deploy/push.
 
 ไฟล์หลักที่แก้/เพิ่ม:
 - /PROGRESS.md (ไฟล์นี้)
@@ -97,7 +97,6 @@
 - /backend/supabase/tests/phase2_game_logic.test.sql (ใหม่ — ชุดทดสอบ 11 กลุ่ม)
 - /frontend/js/gameApi.js (ใหม่)
 - /backups/2026-09-25_phase2/schema_snapshot.sql, config_snapshot.md (ใหม่)
+- /backend/supabase/migrations/0005_phase3_capability_security.sql (เตรียมไว้; ยังไม่ deploy)
 
-เฟสถัดไปต้องเริ่มจาก: เฟส 3 - Realtime Sync (ต้อง pull โค้ดล่าสุดจาก Git ก่อน
-ตามกติกาใน PROJECT.md — และควร deploy migration 0003+0004 ขึ้น Supabase จริง
-ก่อนเริ่ม เพราะเฟส 3 จะต้องอาศัยตาราง games/game_players ที่มีอยู่แล้ว)
+ขั้นตอนถัดไป: ตรวจ migration 0005, ทดสอบ create/join แบบไม่ใช้ Auth, การปฏิเสธ token ผิด และ game RPC ก่อน deploy/commit/push.

@@ -11,8 +11,7 @@ Supabase: a Postgres database, two RPC functions, and Realtime.
 
 ## Schema
 
-See `supabase/migrations/` — run these in order in the Supabase SQL editor
-(or `supabase db push`) to rebuild the database from scratch.
+See schema history in supabase/migrations/. Migrations 0001–0004 are deployed; migration 0005 replaces the Auth-dependent approach with per-seat capability tokens.
 
 - **rooms** — `id, code (unique), status, max_players, created_at`
 - **players** — `id, room_id, name, is_host, joined_at`
@@ -61,10 +60,8 @@ bot flag and hands their seat back, hand untouched.
 
 ### Testing this phase
 
-This sandbox cannot reach `*.supabase.co` (same network restriction noted
-in the Phase 1 PROGRESS.md), so the rules engine was tested against a
-disposable local Postgres 16 instance instead, running the exact same
-migration files. To repeat this:
+The Phase 2 rules suite was tested against a disposable local Postgres 16
+instance using the same migration files. To repeat the offline suite:
 
 ```
 createdb uno_test
@@ -75,9 +72,21 @@ psql uno_test -v ON_ERROR_STOP=1 \
   -f supabase/tests/phase2_game_logic.test.sql
 ```
 
-A clean run ends with `ALL PHASE 2 TESTS PASSED` and exit code 0. This
-proves the rules engine is correct against real Postgres; it does NOT
-prove the live Supabase project has these functions deployed yet, or that
-Realtime picks up game state changes the way it already does for the
-lobby (that wiring is Phase 3's job) — see PROGRESS.md for exactly what
-is and isn't verified.
+A clean run ends with `ALL PHASE 2 TESTS PASSED` and exit code 0. This tests
+the rules against real Postgres. Phase 2 migrations are also deployed on the live
+Supabase project (Postgres 17.6), but no full game has yet been verified through
+the UI and game-state Realtime sync is not implemented; see PROGRESS.md.
+
+## Phase 3 security foundation
+
+Migration supabase/migrations/0005_phase3_capability_security.sql does not
+depend on Supabase Auth. Each browser tab creates a cryptographically random
+256-bit seat token; the database stores only its SHA-256 digest. Room roster,
+game state, player hand, and game-action RPCs verify that capability. Direct
+table access is revoked, and the lobby polls its protected roster RPC rather
+than listening to public Postgres Changes payloads. Invite-code lookup returns
+only room metadata and player count.
+
+The token is a bearer secret: anyone who steals it can act as that seat. It is
+kept in tab-scoped sessionStorage; do not log or share it. XSS prevention and
+a production rate limit for room creation remain important follow-ups.
