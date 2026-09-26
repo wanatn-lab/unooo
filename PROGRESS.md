@@ -1,5 +1,73 @@
 # Progress
 
+## Phase 4 — Game Table UI
+
+สถานะ: **ยังไม่ปิดเฟส** — โค้ดเสร็จและ commit ไว้ใน local `main` แล้ว
+(`1b8acf1`, `cd04978`) แต่ยังขาด 2 อย่างที่ PROJECT.md บังคับก่อนปิดเฟส: (1)
+push ขึ้น GitHub จริง และ (2) ทดสอบ 2 ผู้เล่นจริงผ่านเบราว์เซอร์ ทั้งสองอย่าง
+ติดปัญหาโครงสร้างพื้นฐานที่อธิบายไว้ด้านล่าง ไม่ใช่บั๊กของโค้ด
+
+สิ่งที่เสร็จ:
+- Migration 0010 (additive) เพิ่ม `hand_count` ใน `game_player_public_state`
+  และฟังก์ชันที่สร้าง type นี้ (`get_game_players`, `call_uno`,
+  `catch_uno_failure`, `heartbeat`) — ไม่มีการลบ/เปลี่ยนความหมายของ table,
+  RPC หรือกติกาใดๆ **Apply ขึ้น production Supabase แล้ว** และตรวจสอบผ่าน
+  `pg_type`/`pg_attribute` และ security advisor แล้ว (ไม่มี finding ใหม่)
+- `frontend/js/game.js` (ใหม่): หน้าโต๊ะไพ่เต็มรูปแบบ — มือของผู้เล่นเอง,
+  กองทิ้ง/กองจั่ว, สีที่ใช้งานอยู่, ใครกำลังเดิน, ทิศทาง, สถานะผู้เล่นอื่น
+  (เชื่อมต่อ/บอท/UNO/จำนวนไพ่), ปุ่ม play/draw/pass/call UNO/catch UNO,
+  ตัวเลือกสีสำหรับ Wild, ยืนยันก่อนประกาศ UNO, และหน้าจอจบเกม เชื่อมต่อผ่าน
+  `frontend/js/gameApi.js`/`gameSync.js` เท่านั้น (ไม่มี direct table access,
+  ไม่มี public Realtime) ใช้ค่าที่ RPC คืนกลับมาทันที (play_card/pass_turn/
+  call_uno/catch_uno_failure คืน row ที่เพิ่งเปลี่ยน) เพื่อให้ UI ตอบสนอง
+  ทันทีแทนที่จะรอ poll รอบถัดไป (~2 วินาที) ซึ่ง poll รอบถัดไปจะ reconcile
+  กับ state จริงเสมอ
+- Loading/reconnect/error states ครบ: banner "Loading table…",
+  "Reconnecting…" (เมื่อ poll error), banner แจ้งเมื่อบอทกำลังเล่นแทน
+  (is_bot ของตัวเอง), banner error สำหรับ action ที่ล้มเหลว
+- Reduced-motion: ใช้ CSS transition เบาๆ เท่านั้น (ไม่มี JS animation loop)
+  จึงถูกครอบคลุมโดย `prefers-reduced-motion` และปุ่ม "Reduce motion" ที่มีอยู่
+  เดิมโดยอัตโนมัติ — ไม่ต้องเขียนกลไกแยก
+- `frontend/js/avatars.js` (ใหม่): แยก avatar list ออกจาก lobby.js เพื่อให้
+  ผู้เล่นได้ avatar เดิมทั้งใน Lobby และ Game view
+- `frontend/js/lobby.js`, `main.js`: ต่อ flow lobby → game view อัตโนมัติเมื่อ
+  มีเกมเกิดขึ้น (ทั้งกรณีกดเริ่มเองและกรณี host คนอื่นเริ่ม หรือ refresh หน้า
+  ระหว่างเกม)
+- ไม่ได้แตะ game logic (`0004_phase2_game_logic.sql`) หรือ networking
+  (`gameApi.js`/`gameSync.js`) ตามที่กำหนดไว้ นอกจาก migration 0010 ที่เป็น
+  additive ล้วนๆ
+
+สิ่งที่ยังไม่เสร็จ (บล็อกโดยโครงสร้างพื้นฐาน ไม่ใช่โค้ด):
+- **Push ไป GitHub ถูกปฏิเสธ**: session นี้ไม่มีสิทธิ์เขียนของ GitHub สำหรับ
+  `wanatn-lab/unooo` ต้องให้ org admin ติดตั้ง Claude GitHub App
+  (https://github.com/apps/claude/installations/select_target) หรือเชื่อม
+  GitHub ใหม่ใน Claude.ai settings ก่อน ถึงจะ push ได้ (และ Netlify
+  auto-deploy จาก main ที่ผูกไว้แล้วจะทำงานตามปกติ)
+- **ยังไม่ได้ทดสอบ 2 ผู้เล่นจริงผ่านเบราว์เซอร์**: sandbox นี้ยังต่อตรงไปยัง
+  `*.supabase.co` ไม่ได้ (ข้อจำกัดเดิมจาก Phase 1-3) และการลอง deploy preview
+  ตรงไปยัง Netlify จาก sandbox (bypass Git) ก็ถูกปฏิเสธโดย network policy
+  ของ sandbox เช่นกัน (ยืนยันจาก proxy diagnostics ว่าเป็น org policy 403 ไม่ใช่
+  บั๊ก) จึงต้อง push ขึ้นจริงก่อนถึงจะมีที่ deploy ให้ทดสอบได้
+- Opponent hand-count badge ใช้ `hand_count` ใหม่ได้ครบแล้ว แต่ยังไม่เคยเห็น
+  ทำงานจริงในเบราว์เซอร์เพราะเหตุผลด้านบน
+- พบเอกสารไม่ตรงกันเล็กน้อย (ไม่เกี่ยวกับ Phase 4): production มี migration
+  ชื่อ `phase1_fix_search_path` ที่ apply ไว้แล้วแต่ไม่มีไฟล์อยู่ใน
+  `backend/supabase/migrations/` ของ repo — ไม่ได้แตะต้อง แค่บันทึกไว้
+
+ไฟล์หลักที่แก้/เพิ่ม:
+- `/backend/supabase/migrations/0010_phase4_hand_count.sql` (ใหม่, deploy แล้ว)
+- `/frontend/js/game.js` (ใหม่)
+- `/frontend/js/avatars.js` (ใหม่)
+- `/frontend/js/lobby.js`, `/frontend/js/main.js` (แก้ไขเพื่อต่อ flow ไปหน้าเกม)
+- `/frontend/index.html`, `/frontend/css/style.css` (เพิ่ม markup/สไตล์หน้าโต๊ะไพ่)
+- `/backups/2026-09-26_phase4/` (backup migration + netlify.toml — ไม่ใช่
+  closeout backup ตัวเต็ม เพราะเฟสยังไม่ปิด ดู README ในโฟลเดอร์นั้น)
+
+เฟสถัดไปต้องเริ่มจาก: **ปิด Phase 4 ให้เสร็จก่อน** — pull code ล่าสุดจาก
+`main` (หลังแก้สิทธิ์ push แล้ว), ทดสอบ 2 ผู้เล่นจริงผ่านเบราว์เซอร์บน
+Netlify production, แล้วค่อยอัปเดตส่วนนี้เป็น "ปิดเฟสแล้ว" พร้อม tag
+`phase-4-complete` จากนั้นจึงเริ่ม Phase 5 ตามที่ระบุไว้เดิม
+
 ## Phase 3 — Protected State Sync
 
 สถานะ: **ปิดเฟสแล้ว** (2026-09-26)
