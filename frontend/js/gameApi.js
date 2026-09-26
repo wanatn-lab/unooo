@@ -40,6 +40,21 @@ export async function startGame(roomId, playerId) {
   return data;
 }
 
+
+/** Finds the current game for a room without exposing any unprotected rows. */
+export async function getRoomGame(roomId, playerId) {
+  const { data, error } = await supabase
+    .rpc("get_room_game", {
+      p_room_id: roomId,
+      p_player_id: playerId,
+    p_access_token: getAccessToken(),
+    })
+    .maybeSingle();
+
+  if (error) throw new Error("Could not check whether this room has started.");
+  return data;
+}
+
 /**
  * Plays a card. For a Wild or Wild Draw 4, pass the chosen color as
  * `chosenColor`. Pass `declareUno: true` when the player is calling UNO

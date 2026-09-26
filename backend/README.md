@@ -77,7 +77,7 @@ the rules against real Postgres. Phase 2 migrations are also deployed on the liv
 Supabase project (Postgres 17.6), but no full game has yet been verified through
 the UI and game-state Realtime sync is not implemented; see PROGRESS.md.
 
-## Phase 3 security foundation
+## Phase 3: protected state sync
 
 Migration supabase/migrations/0005_phase3_capability_security.sql does not
 depend on Supabase Auth. Each browser tab creates a cryptographically random
@@ -90,3 +90,17 @@ only room metadata and player count.
 The token is a bearer secret: anyone who steals it can act as that seat. It is
 kept in tab-scoped sessionStorage; do not log or share it. XSS prevention and
 a production rate limit for room creation remain important follow-ups.
+
+Migration `supabase/migrations/0006_phase3_protected_state_sync.sql` adds
+`get_room_game(room_id, player_id, access_token)`, which lets an already
+seated player discover a game without opening up `games` or
+`game_players`. `frontend/js/gameSync.js` polls this RPC while waiting in
+the lobby, then polls the public game state, player state, and only that
+player's own hand every two seconds. It also sends a heartbeat every eight
+seconds so reconnect and bot-takeover logic remains live.
+
+This is deliberately protected polling rather than public Postgres Changes:
+private Realtime authorization is JWT/RLS-based, while this application uses
+non-JWT capability tokens. A public changefeed would reveal card state to
+non-members. The Phase 3 metadata/permission check is in
+`supabase/tests/phase3_protected_state_sync.test.sql`.

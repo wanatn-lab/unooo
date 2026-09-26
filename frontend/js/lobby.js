@@ -7,10 +7,14 @@ import { getPlayers, subscribeToPlayers } from "./roomApi.js";
 import { CONFIG } from "./config.js";
 import { clearSession, getSession } from "./session.js";
 import { startGame } from "./gameApi.js";
+import { subscribeToGameState, subscribeToRoomGame } from "./gameSync.js";
 
-let unsubscribe = null;
+let unsubscribePlayers = null;
+let unsubscribeGameDiscovery = null;
+let unsubscribeGameState = null;
 let startInProgress = false;
 let gameStarted = false;
+let syncedGameId = null;
 
 // Decorative only — Phase 1 has no character-select step yet (that's a
 // later phase per the project README), so each player just gets one of
@@ -77,12 +81,57 @@ async function renderPlayers(roomId) {
   }
 
   const status = document.getElementById("lobby-status");
-  if (status) {
+  if (status && !gameStarted) {
     status.textContent =
       players.length >= CONFIG.MAX_PLAYERS_PER_ROOM
         ? "Room is full — ready to start"
         : `${players.length} of ${CONFIG.MAX_PLAYERS_PER_ROOM} echoes online`;
   }
+}
+
+function renderGameSnapshot({ game }) {
+  const status = document.getElementById("lobby-status");
+  const gameHint = document.getElementById("lobby-game-hint");
+
+  if (game.status === "finished") {
+    if (status) status.textContent = "Game finished — final state synchronized.";
+    if (gameHint) gameHint.textContent = "The card-table UI is the next phase.";
+    return;
+  }
+
+  if (status) status.textContent = "Game in progress — protected state sync active.";
+  if (gameHint) gameHint.textContent = "Game state is synchronized securely for every seated player.";
+}
+
+function beginGameSync(game) {
+  if (!game?.id || game.id === syncedGameId) return;
+
+  gameStarted = true;
+  syncedGameId = game.id;
+  if (unsubscribeGameDiscovery) {
+    unsubscribeGameDiscovery();
+    unsubscribeGameDiscovery = null;
+  }
+
+  const startButton = document.getElementById("btn-start-game");
+  if (startButton) {
+    startButton.disabled = true;
+    startButton.textContent = "Game started";
+  }
+
+  const session = getSession();
+  if (!session?.playerId) return;
+  if (unsubscribeGameState) unsubscribeGameState();
+
+  unsubscribeGameState = subscribeToGameState(
+    game.id,
+    session.playerId,
+    renderGameSnapshot,
+    () => {
+      const status = document.getElementById("lobby-status");
+      if (status) status.textContent = "Reconnecting protected game state…";
+    },
+  );
 }
 
 /**
@@ -92,6 +141,7 @@ async function renderPlayers(roomId) {
 export function initLobbyView(roomId, code) {
   startInProgress = false;
   gameStarted = false;
+  syncedGameId = null;
 
   const lobby = document.getElementById("view-lobby");
   const leaveButton = document.getElementById("btn-leave-room");
@@ -135,11 +185,10 @@ export function initLobbyView(roomId, code) {
 
     try {
       const game = await startGame(roomId, session.playerId);
-      gameStarted = true;
-      gameHint.textContent = "Game started.";
-      feedback.textContent = "Game started successfully. The start-game RPC is connected; the card-table UI is not wired yet.";
+      beginGameSync(game);
+      gameHint.textContent = "Game started — synchronizing every player now.";
+      feedback.textContent = "Game started. Every seated player will detect and synchronize it automatically.";
       feedback.hidden = false;
-      startButton.textContent = "Game started";
     } catch (error) {
       feedback.textContent = error.message;
       feedback.hidden = false;
@@ -153,7 +202,28 @@ export function initLobbyView(roomId, code) {
   document.getElementById("player-max").textContent = CONFIG.MAX_PLAYERS_PER_ROOM;
 
   renderPlayers(roomId);
-  unsubscribe = subscribeToPlayers(roomId, () => renderPlayers(roomId));
+  unsubscribePlayers = subscribeToPlayers(roomId, () => renderPlayers(roomId));
+
+  const session = getSession();
+  if (session?.playerId) {
+    unsubscribeGameDiscovery = subscribeToRoomGame(
+      roomId,
+      session.playerId,
+      (game) => {
+        beginGameSync(game);
+        const feedback = document.getElementById("game-start-feedback");
+        if (feedback) {
+          feedback.textContent = "The host started the game. State sync is active.";
+          feedback.hidden = false;
+        }
+        void renderPlayers(roomId);
+      },
+      () => {
+        const status = document.getElementById("lobby-status");
+        if (status && !gameStarted) status.textContent = "Reconnecting room state…";
+      },
+    );
+  }
 
   document.getElementById("btn-copy-link").onclick = async () => {
     const link = CONFIG.roomLink(code);
@@ -174,9 +244,14 @@ export function initLobbyView(roomId, code) {
 }
 
 export function teardownLobbyView() {
-  if (unsubscribe) unsubscribe();
+  if (unsubscribePlayers) unsubscribePlayers();
+  if (unsubscribeGameDiscovery) unsubscribeGameDiscovery();
+  if (unsubscribeGameState) unsubscribeGameState();
   document.getElementById("btn-start-game")?.remove();
   document.getElementById("lobby-game-hint")?.remove();
   document.getElementById("game-start-feedback")?.remove();
-  unsubscribe = null;
+  unsubscribePlayers = null;
+  unsubscribeGameDiscovery = null;
+  unsubscribeGameState = null;
+  syncedGameId = null;
 }
