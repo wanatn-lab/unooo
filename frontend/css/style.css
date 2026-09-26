@@ -473,6 +473,7 @@ body.in-game .app { max-width: 760px; }
 .hand-card.is-dim { opacity: .5; }
 
 /* ---- modals (wild color picker / UNO confirm / game over) ---- */
+.modal-overlay[hidden] { display: none; }
 .modal-overlay {
   position: fixed;
   inset: 0;
