@@ -11,7 +11,7 @@ Supabase: a Postgres database, two RPC functions, and Realtime.
 
 ## Schema
 
-See schema history in supabase/migrations/. Migrations 0001–0005 are deployed; migration 0005 uses per-seat capability tokens instead of Supabase Auth.
+See schema history in supabase/migrations/. Migrations 0001–0009 are deployed; migration 0005 uses per-seat capability tokens instead of Supabase Auth, migration 0006 adds protected game discovery, and migration 0009 records the transactional production smoke test.
 
 - **rooms** — `id, code (unique), status, max_players, created_at`
 - **players** — `id, room_id, name, is_host, joined_at`
@@ -74,8 +74,7 @@ psql uno_test -v ON_ERROR_STOP=1 \
 
 A clean run ends with `ALL PHASE 2 TESTS PASSED` and exit code 0. This tests
 the rules against real Postgres. Phase 2 migrations are also deployed on the live
-Supabase project (Postgres 17.6), but no full game has yet been verified through
-the UI and game-state Realtime sync is not implemented; see PROGRESS.md.
+Supabase project (Postgres 17.6). Phase 3 then verified protected two-seat game-state synchronization in production; the card-table UI remains a later phase.
 
 ## Phase 3: protected state sync
 
