@@ -9,10 +9,10 @@ migration production แล้ว. Migration 0005 ใช้ per-seat capability 
 `frontend`. ต่อมา production deploy สำเร็จผ่าน Netlify deploy service:
 deploy `6ab718964e08cc8a8278ebc0` สถานะ `ready`, URL
 `https://unooo-lobby.netlify.app`. หน้าเว็บ production จึงมี frontend Phase 3
-แล้ว. มีการ push test commit `7c195347` เข้า `main` หลังพยายามเชื่อม
-Git แล้ว แต่ Netlify ยังไม่สร้าง deploy จาก Git ภายในรอบตรวจแรก (ประมาณหนึ่งนาที)
-จึงยังต้องยืนยัน Repository link และ Continuous deployment ใน dashboard ก่อนจะถือว่า
-auto deploy ใช้งานได้. Production ที่เผยแพร่อยู่ยังเป็น deploy แบบ API ที่สำเร็จ.
+แล้ว. ยืนยัน continuous deployment แล้ว: push commit `bfe537b6` เข้า
+`main` สร้าง production deploy `6ab71a2778dff6ba610433a2` อัตโนมัติ,
+สถานะ `ready`, ผูกกับ branch `main` และ commit นั้นโดยตรง. ดังนั้น push
+ครั้งต่อไปเข้า `main` จะ deploy เว็บ production ให้อัตโนมัติ.
 
 โค้ดเฟส 2 ถูก push แล้วที่ commit 65c1e76 และ tag phase-2-complete.เฟสที่ทำล่าสุด: เฟส 2 - Game Logic
 สถานะ: ปิดเฟสแล้ว (2026-09-25) — แต่ "ปิดเฟส" ในที่นี้หมายถึงโค้ด+เทสเสร็จและ
