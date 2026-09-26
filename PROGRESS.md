@@ -1,10 +1,15 @@
-สถานะงานต่อเนื่อง (2026-09-25): Phase 3 security deploy แล้ว โดยไม่ต้องเปิด
-Anonymous Auth. Migration 0005 ใช้ per-seat capability token แบบสุ่ม 256-bit,
-เก็บเฉพาะ SHA-256 ใน DB, ปิด direct table access และเปลี่ยน lobby เป็น polling.
-ทดสอบ public API แล้ว: join ห้องที่ไม่มีถูกปฏิเสธ, token ผิดถูกปฏิเสธ,
-อ่าน players โดยตรงถูกปฏิเสธ และ invite lookup ตอบได้; ตาราง production ยังว่าง.
-Commit a0d0b41 ถูก push ไป origin/main แล้ว. ยังไม่ได้ยืนยัน happy-path create/join
-ผ่าน browser UI; ต้องทำ smoke test ก่อนเปิดเล่นจริง.
+สถานะงานต่อเนื่อง (2026-09-26): Phase 3 protected state sync เสร็จและ deploy
+migration production แล้ว. Migration 0005 ใช้ per-seat capability token แบบสุ่ม
+256-bit (เก็บเฉพาะ SHA-256) ปิด direct table access; migration 0006 เพิ่ม
+`get_room_game` สำหรับค้นหาเกมของห้องผ่าน token ที่ถูกต้อง และ frontend
+`gameSync.js` poll state/hand ที่ป้องกันไว้ พร้อม heartbeat สำหรับ bot takeover.
+ตรวจ production แล้วว่า RPC มีอยู่และ anon เรียกได้ แต่ anon ไม่มีสิทธิ์ SELECT
+ตาราง `games` หรือ `game_players` โดยตรง. โค้ดอยู่บน `main` ที่ commit
+`f1c022a`; `netlify.toml` ที่ commit `fe55907` ล็อก publish directory เป็น
+`frontend`. การ deploy Netlify รอบนี้ยังไม่สำเร็จ เพราะทั้ง Netlify CLI และ
+build endpoint ที่เชื่อมต่อปฏิเสธ credential ด้วย HTTP 401; production URL จึงยัง
+เป็น deploy เดิมและยังไม่มี frontend Phase 3. ต้อง deploy จาก Netlify dashboard
+หรือเชื่อม OAuth/PAT สำหรับ CLI ให้สำเร็จก่อนจึงจะทดสอบหน้าเว็บจริงได้.
 
 โค้ดเฟส 2 ถูก push แล้วที่ commit 65c1e76 และ tag phase-2-complete.เฟสที่ทำล่าสุด: เฟส 2 - Game Logic
 สถานะ: ปิดเฟสแล้ว (2026-09-25) — แต่ "ปิดเฟส" ในที่นี้หมายถึงโค้ด+เทสเสร็จและ
@@ -103,5 +108,9 @@ Commit a0d0b41 ถูก push ไป origin/main แล้ว. ยังไม�
 - /frontend/js/gameApi.js (ใหม่)
 - /backups/2026-09-25_phase2/schema_snapshot.sql, config_snapshot.md (ใหม่)
 - /backend/supabase/migrations/0005_phase3_capability_security.sql (deploy แล้ว)
+- /backend/supabase/migrations/0006_phase3_protected_state_sync.sql (deploy แล้ว)
+- /backend/supabase/tests/phase3_protected_state_sync.test.sql (ใหม่ — ตรวจ RPC/privilege)
+- /frontend/js/gameSync.js (ใหม่ — protected state polling + heartbeat)
+- /netlify.toml (ล็อก publish directory เป็น frontend)
 
-ขั้นตอนถัดไป: smoke-test create/join และ lobby ผ่าน browser จริง; จากนั้นทำ rate limiting และ XSS hardening.
+ขั้นตอนถัดไป: deploy main จาก Netlify dashboard (หรือเชื่อม CLI credential ที่ใช้ได้), แล้ว smoke-test create/join, host start game, และผู้เล่นที่สองตรวจพบเกมผ่าน browser จริง; จากนั้นทำ rate limiting และ XSS hardening.
