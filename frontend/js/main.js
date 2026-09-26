@@ -8,11 +8,13 @@ import { getSession } from "./session.js";
 import { getRoomByCode } from "./roomApi.js";
 import { initHomeView } from "./home.js";
 import { initLobbyView, teardownLobbyView } from "./lobby.js";
+import { initGameView, teardownGameView } from "./game.js";
 import { CONFIG } from "./config.js";
 
 const views = {
   home: document.getElementById("view-home"),
   lobby: document.getElementById("view-lobby"),
+  game: document.getElementById("view-game"),
   error: document.getElementById("view-error"),
 };
 
@@ -20,6 +22,9 @@ function showView(name) {
   for (const [key, el] of Object.entries(views)) {
     el.hidden = key !== name;
   }
+  // The game table needs more width than the narrow lobby/home cards do —
+  // scoped to a body class so it only affects .app while this view is shown.
+  document.body.classList.toggle("in-game", name === "game");
 }
 
 function showErrorView(message) {
@@ -28,9 +33,16 @@ function showErrorView(message) {
 }
 
 function enterLobby(roomId, code) {
+  teardownGameView();
   teardownLobbyView();
   showView("lobby");
-  initLobbyView(roomId, code);
+  initLobbyView(roomId, code, (game) => enterGame(roomId, code, game));
+}
+
+function enterGame(roomId, code, game) {
+  teardownLobbyView();
+  showView("game");
+  void initGameView(roomId, code, game);
 }
 
 async function boot() {

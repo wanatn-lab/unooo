@@ -309,3 +309,209 @@ body.reduce-motion *, body.reduce-motion *::before, body.reduce-motion *::after 
   .room-code { font-size: 1.6rem; }
   .player-list { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); }
 }
+
+/* ===========================================================================
+   Game Table (Phase 4) — functional table UI: hand, piles, turn/direction,
+   other players' status. Wired to frontend/js/game.js. Colors below are the
+   actual UNO card colors, kept separate from the neon UI palette above so
+   cards stay instantly recognizable.
+   =========================================================================== */
+
+:root {
+  --uno-red: #e6394f;
+  --uno-yellow: #ffce3d;
+  --uno-green: #3ddc84;
+  --uno-blue: #3aa0ff;
+}
+
+body.in-game .app { max-width: 760px; }
+
+.status-banner {
+  color: var(--ink);
+  background: rgba(255, 181, 93, .14);
+  border: 1px solid rgba(255, 181, 93, .4);
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin: 0 0 12px;
+  font-size: .85rem;
+}
+.status-banner-warn { color: #ffe3b8; }
+
+/* ---- turn bar ---- */
+.turn-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.turn-indicator { font-weight: 800; font-size: 1.05rem; }
+.direction-indicator { font-size: 1.4rem; color: var(--cyan); }
+
+/* ---- opponents ---- */
+.opponent-ring {
+  list-style: none;
+  margin: 0 0 18px;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+.opponent-tile {
+  flex: 0 1 140px;
+  padding-bottom: 12px;
+  min-height: auto;
+  transition: box-shadow .2s ease, border-color .2s ease;
+}
+.opponent-tile.is-turn {
+  border-color: var(--glow);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--glow) 55%, transparent), 0 0 22px color-mix(in srgb, var(--glow) 35%, transparent);
+}
+.opponent-badges { position: relative; z-index: 1; display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.badge {
+  font: 700 .62rem/1.6 ui-monospace, monospace;
+  color: var(--ink);
+  background: rgba(255, 255, 255, .12);
+  border: 1px solid var(--line);
+  padding: 2px 6px;
+  border-radius: 999px;
+}
+.badge-warn { color: #0b0717; background: var(--amber); border-color: var(--amber); }
+.badge-uno { color: #0b0717; background: var(--lime); border-color: var(--lime); }
+.catch-btn {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: auto;
+  margin-top: 8px;
+  padding: 5px 10px;
+  font-size: .72rem;
+  font-weight: 700;
+}
+
+/* ---- cards ---- */
+.card {
+  --card-color: var(--muted);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 68px;
+  height: 96px;
+  border-radius: 10px;
+  background: linear-gradient(160deg, var(--card-color), color-mix(in srgb, var(--card-color) 55%, #000));
+  border: 2px solid rgba(255, 255, 255, .35);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, .35);
+  flex: none;
+}
+.card-value { font: 800 1.3rem/1 ui-sans-serif, system-ui; color: #fff; text-shadow: 0 1px 4px rgba(0, 0, 0, .5); }
+.card-red { --card-color: var(--uno-red); }
+.card-yellow { --card-color: var(--uno-yellow); }
+.card-green { --card-color: var(--uno-green); }
+.card-blue { --card-color: var(--uno-blue); }
+.card-wild { --card-color: #2a2540; background: conic-gradient(var(--uno-red), var(--uno-yellow), var(--uno-green), var(--uno-blue), var(--uno-red)); }
+
+.card-back {
+  --card-color: #201a3d;
+  cursor: pointer;
+  border: 0;
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.card-back:not(:disabled):hover { transform: translateY(-3px); box-shadow: 0 10px 22px rgba(83, 229, 255, .3); }
+.card-back:disabled { opacity: .45; cursor: not-allowed; }
+.card-back-mark { font: 800 .78rem/1 ui-sans-serif, system-ui; color: var(--cyan); letter-spacing: .04em; }
+
+/* ---- center piles ---- */
+.table-center {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: clamp(16px, 5vw, 40px);
+  margin: 8px 0 20px;
+}
+.pile-group { text-align: center; }
+.pile-label { color: var(--muted); font-size: .78rem; margin: 8px 0 0; }
+
+.color-chip {
+  display: block;
+  width: 44px;
+  height: 44px;
+  margin: 0 auto;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, .35);
+  background: rgba(255, 255, 255, .08);
+}
+.color-chip.swatch-red { background: var(--uno-red); }
+.color-chip.swatch-yellow { background: var(--uno-yellow); }
+.color-chip.swatch-green { background: var(--uno-green); }
+.color-chip.swatch-blue { background: var(--uno-blue); }
+
+/* ---- action bar + hand ---- */
+.action-bar { display: flex; gap: 10px; margin-bottom: 14px; }
+.action-btn { margin-top: 0; }
+
+.hand-row {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 4px 2px 10px;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+}
+.hand-card {
+  cursor: pointer;
+  scroll-snap-align: start;
+  transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+}
+.hand-card:hover, .hand-card:focus-visible { transform: translateY(-6px); outline: none; }
+.hand-card.is-playable { box-shadow: 0 0 0 2px var(--lime), 0 8px 20px rgba(217, 255, 82, .3); }
+.hand-card.is-dim { opacity: .5; }
+
+/* ---- modals (wild color picker / UNO confirm / game over) ---- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(5, 3, 18, .72);
+  backdrop-filter: blur(4px);
+  padding: 20px;
+}
+.modal-card {
+  width: 100%;
+  max-width: 340px;
+  background: linear-gradient(135deg, rgba(25, 18, 56, .95), rgba(7, 7, 25, .95));
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 22px;
+  text-align: center;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, .5);
+}
+.color-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 14px 0;
+}
+.color-option {
+  padding: 16px 0;
+  border: 0;
+  border-radius: 12px;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, .4);
+  background: var(--swatch);
+  cursor: pointer;
+  transition: transform .15s ease;
+}
+.color-option:hover { transform: scale(1.04); }
+
+@media (max-width: 380px) {
+  .card { width: 58px; height: 82px; }
+  .card-value { font-size: 1.1rem; }
+  .opponent-tile { flex-basis: 110px; }
+}

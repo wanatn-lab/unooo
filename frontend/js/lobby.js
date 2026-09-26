@@ -7,29 +7,15 @@ import { getPlayers, subscribeToPlayers } from "./roomApi.js";
 import { CONFIG } from "./config.js";
 import { clearSession, getSession } from "./session.js";
 import { startGame } from "./gameApi.js";
-import { subscribeToGameState, subscribeToRoomGame } from "./gameSync.js";
+import { subscribeToRoomGame } from "./gameSync.js";
+import { avatarFor } from "./avatars.js";
 
 let unsubscribePlayers = null;
 let unsubscribeGameDiscovery = null;
-let unsubscribeGameState = null;
 let startInProgress = false;
 let gameStarted = false;
 let syncedGameId = null;
-
-// Decorative only — Phase 1 has no character-select step yet (that's a
-// later phase per the project README), so each player just gets one of
-// these avatars assigned by their position in the room, purely for the
-// party visual. --glow drives that tile's border/shadow color (set in css).
-const AVATARS = [
-  { file: "nari.webp", glow: "#ff5abf" },
-  { file: "sol.webp", glow: "#51e5ff" },
-  { file: "wren.webp", glow: "#d9ff52" },
-  { file: "imani.webp", glow: "#ffb55d" },
-  { file: "farah.webp", glow: "#a374ff" },
-  { file: "aya.webp", glow: "#77b7ff" },
-  { file: "bao.webp", glow: "#ff7d8e" },
-  { file: "zero.webp", glow: "#f5efff" },
-];
+let onGameStarted = null;
 
 async function renderPlayers(roomId) {
   const players = await getPlayers(roomId);
@@ -37,7 +23,7 @@ async function renderPlayers(roomId) {
   list.innerHTML = "";
 
   players.forEach((player, index) => {
-    const avatar = AVATARS[index % AVATARS.length];
+    const avatar = avatarFor(index);
 
     const li = document.createElement("li");
     li.className = "player-tile";
@@ -89,20 +75,9 @@ async function renderPlayers(roomId) {
   }
 }
 
-function renderGameSnapshot({ game }) {
-  const status = document.getElementById("lobby-status");
-  const gameHint = document.getElementById("lobby-game-hint");
-
-  if (game.status === "finished") {
-    if (status) status.textContent = "Game finished — final state synchronized.";
-    if (gameHint) gameHint.textContent = "The card-table UI is the next phase.";
-    return;
-  }
-
-  if (status) status.textContent = "Game in progress — protected state sync active.";
-  if (gameHint) gameHint.textContent = "Game state is synchronized securely for every seated player.";
-}
-
+// Once a game exists for this room, the Lobby's job is done — it hands off
+// to the Game Table view (game.js), which does its own state sync. The
+// Lobby does not poll game state itself.
 function beginGameSync(game) {
   if (!game?.id || game.id === syncedGameId) return;
 
@@ -119,29 +94,20 @@ function beginGameSync(game) {
     startButton.textContent = "Game started";
   }
 
-  const session = getSession();
-  if (!session?.playerId) return;
-  if (unsubscribeGameState) unsubscribeGameState();
-
-  unsubscribeGameState = subscribeToGameState(
-    game.id,
-    session.playerId,
-    renderGameSnapshot,
-    () => {
-      const status = document.getElementById("lobby-status");
-      if (status) status.textContent = "Reconnecting protected game state…";
-    },
-  );
+  if (onGameStarted) onGameStarted(game);
 }
 
 /**
  * Wires up the Lobby view and starts the real-time player list.
- * Call the returned cleanup function when leaving this view.
+ * `onStarted(game)` is called once a game exists for this room (whether
+ * this tab started it or another player did) so main.js can switch to the
+ * Game Table view. Call teardownLobbyView() when leaving this view.
  */
-export function initLobbyView(roomId, code) {
+export function initLobbyView(roomId, code, onStarted) {
   startInProgress = false;
   gameStarted = false;
   syncedGameId = null;
+  onGameStarted = onStarted ?? null;
 
   const lobby = document.getElementById("view-lobby");
   const leaveButton = document.getElementById("btn-leave-room");
@@ -246,12 +212,11 @@ export function initLobbyView(roomId, code) {
 export function teardownLobbyView() {
   if (unsubscribePlayers) unsubscribePlayers();
   if (unsubscribeGameDiscovery) unsubscribeGameDiscovery();
-  if (unsubscribeGameState) unsubscribeGameState();
   document.getElementById("btn-start-game")?.remove();
   document.getElementById("lobby-game-hint")?.remove();
   document.getElementById("game-start-feedback")?.remove();
   unsubscribePlayers = null;
   unsubscribeGameDiscovery = null;
-  unsubscribeGameState = null;
   syncedGameId = null;
+  onGameStarted = null;
 }

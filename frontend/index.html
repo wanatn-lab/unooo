@@ -66,8 +66,94 @@
           <ul id="player-list" class="player-list"></ul>
         </div>
 
-        <p class="hint">Waiting for the host to start the game&hellip; (coming in a later phase)</p>
+        <p class="hint">Waiting for the host to start the game&hellip;</p>
         <button id="btn-leave-room" class="btn btn-text">Leave room</button>
+      </section>
+
+      <!-- ============================= GAME VIEW =============================
+           Shown once the host starts the game. Renders the table: other
+           players, the draw/discard piles, current color, whose turn it
+           is, and this player's own hand. All game data comes from
+           js/gameApi.js + js/gameSync.js only (protected polling — see
+           backend/README.md, Phase 3). -->
+      <section id="view-game" class="view" hidden>
+        <p id="game-loading" class="hint">Loading table&hellip;</p>
+
+        <div id="game-content" hidden>
+          <p id="game-reconnect-banner" class="status-banner status-banner-warn" hidden>Reconnecting…</p>
+          <p id="game-bot-banner" class="status-banner status-banner-warn" hidden>
+            You went idle — a bot is playing your hand. Do anything below to take back control.
+          </p>
+          <p id="game-action-error" class="error-message" role="status" hidden></p>
+          <p id="game-toast" class="status-banner" role="status" hidden></p>
+
+          <div class="turn-bar">
+            <span id="turn-indicator" class="turn-indicator">Loading…</span>
+            <span id="direction-indicator" class="direction-indicator" title="Turn direction" aria-hidden="true"></span>
+          </div>
+
+          <ul id="opponent-ring" class="opponent-ring" aria-label="Other players"></ul>
+
+          <div class="table-center">
+            <div class="pile-group">
+              <button id="draw-pile" class="card card-back" type="button" aria-label="Draw a card">
+                <span class="card-back-mark">UNO</span>
+              </button>
+              <p class="pile-label">Draw</p>
+            </div>
+            <div class="pile-group">
+              <div id="discard-pile" class="card" aria-label="Discard pile"></div>
+              <p class="pile-label">Discard</p>
+            </div>
+            <div class="pile-group">
+              <span id="current-color-chip" class="color-chip" aria-hidden="true"></span>
+              <p class="pile-label" id="current-color-label">Color</p>
+            </div>
+          </div>
+
+          <div class="action-bar">
+            <button id="btn-pass-turn" class="btn btn-secondary action-btn" type="button" hidden>Pass turn</button>
+            <button id="btn-call-uno" class="btn btn-primary action-btn" type="button" hidden>Call UNO!</button>
+          </div>
+
+          <p class="label">Your hand</p>
+          <ul id="my-hand" class="hand-row"></ul>
+
+          <button id="btn-leave-game" class="btn btn-text">Leave table</button>
+        </div>
+
+        <!-- Wild color picker — shown only when playing a Wild/Wild Draw 4 -->
+        <div id="color-picker" class="modal-overlay" hidden>
+          <div class="modal-card">
+            <h2>Pick a color</h2>
+            <div class="color-options">
+              <button class="color-option" data-color="red" style="--swatch: var(--uno-red)" type="button">Red</button>
+              <button class="color-option" data-color="yellow" style="--swatch: var(--uno-yellow)" type="button">Yellow</button>
+              <button class="color-option" data-color="green" style="--swatch: var(--uno-green)" type="button">Green</button>
+              <button class="color-option" data-color="blue" style="--swatch: var(--uno-blue)" type="button">Blue</button>
+            </div>
+            <button id="color-picker-cancel" class="btn btn-text" type="button">Cancel</button>
+          </div>
+        </div>
+
+        <!-- UNO-before-you-play confirmation — shown only when the card
+             you tapped would leave you with exactly one card. -->
+        <div id="uno-confirm" class="modal-overlay" hidden>
+          <div class="modal-card">
+            <h2>Call UNO?</h2>
+            <p class="hint">Playing this card leaves you with one card left.</p>
+            <button id="uno-confirm-yes" class="btn btn-primary" type="button">Play + Call UNO!</button>
+            <button id="uno-confirm-no" class="btn btn-secondary" type="button">Just play</button>
+          </div>
+        </div>
+
+        <!-- Game over overlay -->
+        <div id="game-over" class="modal-overlay" hidden>
+          <div class="modal-card">
+            <h2 id="game-over-title">Game over</h2>
+            <a href="/" class="btn btn-primary">Back to home</a>
+          </div>
+        </div>
       </section>
 
       <!-- ============================= ERROR VIEW =============================
