@@ -22,12 +22,15 @@ begin
     into v_guest
     from public.join_room(v_host.code, 'P3 smoke guest', v_guest_token);
 
-  select public.start_game(v_host.room_id, v_host.player_id, v_host_token)
-    into v_game;
-  select public.get_room_game(v_host.room_id, v_host.player_id, v_host_token)
-    into v_host_game;
-  select public.get_room_game(v_host.room_id, v_guest.id, v_guest_token)
-    into v_guest_game;
+  select *
+    into v_game
+    from public.start_game(v_host.room_id, v_host.player_id, v_host_token);
+  select *
+    into v_host_game
+    from public.get_room_game(v_host.room_id, v_host.player_id, v_host_token);
+  select *
+    into v_guest_game
+    from public.get_room_game(v_host.room_id, v_guest.id, v_guest_token);
   select public.get_my_hand(v_game.id, v_host.player_id, v_host_token)
     into v_hand;
 
