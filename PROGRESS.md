@@ -1,25 +1,42 @@
-สถานะงานต่อเนื่อง (2026-09-26): Phase 3 protected state sync เสร็จและ deploy
-migration production แล้ว. Migration 0005 ใช้ per-seat capability token แบบสุ่ม
-256-bit (เก็บเฉพาะ SHA-256) ปิด direct table access; migration 0006 เพิ่ม
-`get_room_game` สำหรับค้นหาเกมของห้องผ่าน token ที่ถูกต้อง และ frontend
-`gameSync.js` poll state/hand ที่ป้องกันไว้ พร้อม heartbeat สำหรับ bot takeover.
-ตรวจ production แล้วว่า RPC มีอยู่และ anon เรียกได้ แต่ anon ไม่มีสิทธิ์ SELECT
-ตาราง `games` หรือ `game_players` โดยตรง. โค้ดอยู่บน `main` ที่ commit
-`f1c022a`; `netlify.toml` ที่ commit `fe55907` ล็อก publish directory เป็น
-`frontend`. ต่อมา production deploy สำเร็จผ่าน Netlify deploy service:
-deploy `6ab718964e08cc8a8278ebc0` สถานะ `ready`, URL
-`https://unooo-lobby.netlify.app`. หน้าเว็บ production จึงมี frontend Phase 3
-แล้ว. ยืนยัน continuous deployment แล้ว: push commit `bfe537b6` เข้า
-`main` สร้าง production deploy `6ab71a2778dff6ba610433a2` อัตโนมัติ,
-สถานะ `ready`, ผูกกับ branch `main` และ commit นั้นโดยตรง. ดังนั้น push
-ครั้งต่อไปเข้า `main` จะ deploy เว็บ production ให้อัตโนมัติ.
+# Progress
 
-โค้ดเฟส 2 ถูก push แล้วที่ commit 65c1e76 และ tag phase-2-complete.เฟสที่ทำล่าสุด: เฟส 2 - Game Logic
-สถานะ: ปิดเฟสแล้ว (2026-09-25) — แต่ "ปิดเฟส" ในที่นี้หมายถึงโค้ด+เทสเสร็จและ
-พร้อมให้ push เท่านั้น รอบนี้ผู้ใช้ (project owner) ให้ agent อีกตัว (Codex)
-เป็นคน commit/push ขึ้น GitHub และติด tag `phase-2-complete` เอง — งานฝั่งนี้
-"ทำไฟล์ให้เสร็จและทดสอบให้ผ่าน" ไม่ได้ push/tag ให้จากที่นี่ (ดูหัวข้อ
-"สิ่งที่ยังไม่ได้ทำในรอบนี้" ด้านล่าง)
+## Phase 3 — Protected State Sync
+
+สถานะ: **ปิดเฟสแล้ว** (2026-09-26)
+
+สิ่งที่เสร็จ:
+- Migration 0005 ใช้ per-seat capability token แบบสุ่ม 256-bit เก็บเฉพาะ
+  SHA-256, ถอน direct table access และป้องกัน roster/game/hand ผ่าน narrow RPCs.
+- Migration 0006 เพิ่ม `get_room_game` และ frontend `gameSync.js` ทำ
+  protected polling state ทุก 2 วินาที พร้อม heartbeat สำหรับ bot takeover.
+- Migration 0007–0008 ลบข้อมูลจาก test setup ที่หยุดก่อนจบแบบเจาะจง capability
+  hash; migration 0009 เป็น production smoke test ที่สร้าง‑ตรวจ‑ลบ game สองที่นั่ง
+  ภายใน transaction เดียว.
+- Netlify production deploy พร้อมใช้งานที่ `https://unooo-lobby.netlify.app`;
+  `netlify.toml` กำหนด publish directory เป็น `frontend` และ Git main
+  auto-deploy ได้รับการยืนยันแล้ว.
+
+การทดสอบที่ทำจริง:
+- ตรวจ production RPC/privilege: `get_room_game` มีอยู่, anon เรียก RPC ได้,
+  แต่ anon ไม่มีสิทธิ์ SELECT จาก `games` หรือ `game_players` โดยตรง.
+- Production smoke test 2 ที่นั่ง: create room, join, start game, host/guest
+  ค้นหา game เดียวกันผ่าน capability ของตนเอง, host อ่านมือ 7 ใบ, และ token ข้าม
+  ที่นั่งถูกปฏิเสธ. ตรวจหลังจบแล้วไม่เหลือ smoke players หรือ rooms.
+- Netlify deployment จาก `main` สถานะ ready และผูกกับ Git commit จริง.
+
+Backup:
+- `backups/2026-09-26_phase3/` เก็บสำเนา migrations 0005–0009 และ Netlify
+  build configuration ณ เวลาปิดเฟส.
+
+ขอบเขตที่ย้ายไปเฟสถัดไป:
+- หน้าโต๊ะไพ่และ UI play/draw/pass/UNO ยังไม่มี; เป็น Phase 4 UI.
+- การ sync ใช้ protected polling โดยตั้งใจ ไม่ใช้ public Realtime WebSocket
+  เพราะ capability token ไม่ใช่ JWT.
+- Room-creation rate limiting และ XSS hardening เป็น security follow-up.
+
+## Phase 2 — Game Logic (historical)
+
+สถานะ: ปิดเฟสแล้ว (2026-09-25), code อยู่บน main และ tag `phase-2-complete`.
 
 สิ่งที่เสร็จ:
 - Game state schema ครบ (2.1) — ตาราง `games` (deck, discard_pile, ทิศทาง,
@@ -77,9 +94,8 @@ deploy `6ab718964e08cc8a8278ebc0` สถานะ `ready`, URL
   **ยืนยันแล้วว่า migration เฟส 2 (0003/0004) ถูก deploy บน Supabase โปรเจกต์จริง**
   (Postgres 17.6) และ backend migrations ถูกบันทึกไว้ใน project history; ยังขาด
   การทดสอบเกมเต็มรูปแบบผ่าน UI จริง.
-- ยังไม่ได้ทดสอบร่วมกับ Supabase Realtime เลย (เฟส 3 ถึงจะทำ sync ระหว่างเล่น)
-  ตอนนี้การเดินไพ่ทุกครั้งต้อง refresh/poll เอาข้อมูลใหม่เอง ยังไม่มีการ
-  broadcast อัตโนมัติเหมือนที่ lobby ทำได้ในเฟส 1
+- Phase 3 แก้การ sync ด้วย protected polling ทุก 2 วินาที ไม่ใช้ public
+  Realtime broadcast เพราะ seat capability token ไม่ใช่ JWT; ดูสรุป Phase 3 ด้านบน.
 - เพิ่มปุ่ม `Start Game` เฉพาะ host ใน lobby (commit `84a6dbc`); เรียก
   `start_game()` ผ่าน `frontend/js/gameApi.js` และกดได้เมื่อมีผู้เล่นอย่างน้อย 2 คน.
   ตรวจ syntax แล้ว แต่ยังไม่ได้ smoke-test ผ่าน browser จริง. หน้าจอเล่นไพ่และ UI
@@ -96,9 +112,9 @@ deploy `6ab718964e08cc8a8278ebc0` สถานะ `ready`, URL
 - ยังไม่มีระบบลบ/ดึงผู้เล่นออกจากเกมกลางคัน (ถ้าผู้เล่นออกจากห้องจริงๆ ไม่ใช่
   แค่ disconnect ชั่วคราว ระบบนี้ยังไม่รองรับ มีแต่กรณี "หายไปชั่วคราวแล้วบอท
   เล่นแทน")
-- Security phase 3: migration 0005 deploy แล้วและโค้ดอยู่บน main. Security advisor
-  ยังรายงาน anon-executable SECURITY DEFINER RPCs ซึ่งตั้งใจเปิดเป็น API และตรวจ
-  capability token ภายใน; มี RLS-no-policy INFO เพราะ direct privileges ถูกถอน.
+- Security Phase 3 ปิดแล้ว: SECURITY DEFINER RPCs ที่ anon เรียกได้เป็น API ที่
+  ตั้งใจให้ตรวจ capability ภายใน; RLS-no-policy INFO เป็นผลจากการถอน direct
+  table privileges.
 - ยังต้อง smoke-test create/join และ roster ใน browser จริง; production DB ยังไม่มี
   room/player/game data จากการทดสอบ. Room-creation rate limiting และ XSS prevention
   เป็น hardening follow-up.
@@ -116,4 +132,6 @@ deploy `6ab718964e08cc8a8278ebc0` สถานะ `ready`, URL
 - /frontend/js/gameSync.js (ใหม่ — protected state polling + heartbeat)
 - /netlify.toml (ล็อก publish directory เป็น frontend)
 
-ขั้นตอนถัดไป: deploy main จาก Netlify dashboard (หรือเชื่อม CLI credential ที่ใช้ได้), แล้ว smoke-test create/join, host start game, และผู้เล่นที่สองตรวจพบเกมผ่าน browser จริง; จากนั้นทำ rate limiting และ XSS hardening.
+ขั้นตอนถัดไป: Phase 4 — สร้างหน้าโต๊ะไพ่และ UI สำหรับ play/draw/pass/UNO โดยใช้
+protected state sync ที่ปิดแล้ว; rate limiting และ XSS hardening เป็นงาน hardening
+ถัดไป.
