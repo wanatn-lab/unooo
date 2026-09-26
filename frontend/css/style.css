@@ -178,6 +178,9 @@ input[type="text"]:focus-visible { outline: 2px solid var(--cyan); outline-offse
   transition: transform .2s ease, filter .2s ease;
 }
 .btn:active { transform: translateY(1px) scale(.99); }
+.btn[hidden] { display: none; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn:disabled:hover, .btn:disabled:active { transform: none; filter: none; }
 
 .btn-primary {
   color: #0b0717;

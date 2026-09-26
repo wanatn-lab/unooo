@@ -2,7 +2,7 @@
 // All Supabase calls related to rooms/players live here. Room/player rows
 // are never read directly; RPCs verify the caller's per-seat capability.
 // ---------------------------------------------------------------------------
-import { supabase, getOrCreateAccessToken } from "./supabaseClient.js";
+import { supabase, getOrCreateAccessToken, getAccessToken } from "./supabaseClient.js";
 import { CONFIG } from "./config.js";
 
 export async function createRoom(hostName) {
