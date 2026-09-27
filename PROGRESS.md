@@ -69,6 +69,24 @@ play/draw/pass ที่ทดสอบสดผ่านแล้วทุก�
    consistency ไม่ใช่บั๊กกติกา — แก้แล้ว, apply ขึ้น production แล้ว,
    security advisor ไม่มี finding ใหม่
 
+**บั๊กที่พบหลังปิดเฟส (2026-09-27) จาก user เข้าเล่นจริงครั้งแรก — แก้และ
+deploy แล้ว, commit `b4d8713`**:
+4. `frontend/css/style.css`: class `.card` ถูกใช้ซ้ำ 2 ความหมายในไฟล์
+   เดียวกัน — เป็น container กล่อง UI ธรรมดา (การ์ด "Create a room"/"Join a
+   room"/room-code) ที่มีมาตั้งแต่ Phase 1 กับเป็นการ์ดไพ่จริงบนโต๊ะเกมที่
+   เพิ่มเข้ามาใน Phase 4 เพราะ CSS อ่านจากบนลงล่าง กติกาการ์ดไพ่ (ท้ายไฟล์)
+   เลยชนะทับกติกากล่อง UI ทั้งหมด บีบกล่อง "Create a room"/"Join a room" ทุก
+   กล่องในหน้าแรกและ Lobby ให้เหลือแค่ 68x96px ตัวหนังสือ/ช่องกรอกล้นออกนอก
+   กล่องจนเล่นไม่ได้เลย (ผู้ใช้แจ้งจากการเข้าเล่นจริงครั้งแรกทางมือถือ) — บั๊ก
+   นี้อยู่ในโค้ดมาตั้งแต่ commit `cd04978` (Phase 4 ตอนแรก) แต่ตอนทดสอบสดปิด
+   เฟส 4 ไม่เจอเพราะช่วงนั้นเลี่ยงการ `navigate`/screenshot จริงหลังโดน
+   permission denial เลยตรวจแค่ accessibility tree/ข้อความ ซึ่งไม่เห็นบั๊ก
+   ภาพแบบนี้ — แก้ด้วยการเปลี่ยนชื่อ class การ์ดไพ่เป็น `.playing-card`
+   (ไม่กระทบ game logic/RPC ใดๆ, เปลี่ยนแค่ชื่อ class ใน CSS/HTML/JS) ตรวจซ้ำ
+   แล้วด้วย headless render ในเครื่อง + เล่นสด 2 คนจริงบน production อีกรอบ
+   (create/join room, start game, play การ์ดปกติ, Wild+เลือกสี — ทุกอย่าง
+   render ถูกต้อง ไม่มี console error) ก่อน deploy
+
 Migration `0012_phase4_remove_smoke_test_room.sql`: ลบห้องทดสอบ (`BD6351`)
 ที่ใช้ทดสอบสดทิ้งหลังปิดเฟส (scoped ด้วย id+code เจาะจง, cascade ลบ
 games/game_players/players ที่เกี่ยวข้องหมดแล้ว, ตรวจว่าเหลือ 0 แถวจริง)
@@ -84,6 +102,9 @@ games/game_players/players ที่เกี่ยวข้องหมดแ�
   + แก้บั๊ก `[hidden]`)
 - `/backups/2026-09-26_phase4_closeout/` (closeout backup ตัวเต็ม — ดู README
   ในโฟลเดอร์นั้นสำหรับรายละเอียดครบทุกอย่างที่ทดสอบและบั๊กที่แก้)
+- `/frontend/css/style.css`, `/frontend/index.html`, `/frontend/js/game.js`
+  (2026-09-27, commit `b4d8713`): แก้บั๊ก #4 ด้านบน — เปลี่ยนชื่อ class
+  การ์ดไพ่จาก `.card` เป็น `.playing-card`
 
 เฟสถัดไปต้องเริ่มจาก: Phase 5 (ตามที่ระบุไว้เดิมในเอกสารโปรเจกต์) — คำแนะนำ:
 ถ้ามีเวลา ควรทำการทดสอบสดเฉพาะจุดสำหรับ flow "Call UNO"/"Catch!" ที่ยังไม่ได้
