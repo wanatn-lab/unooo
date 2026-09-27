@@ -422,13 +422,23 @@ body.in-game .app { max-width: 760px; }
 .card-wild { --card-color: #2a2540; background: conic-gradient(var(--uno-red), var(--uno-yellow), var(--uno-green), var(--uno-blue), var(--uno-red)); }
 
 .card-back {
-  --card-color: #201a3d;
+  /* Was near-black (#201a3d), almost the same tone as the page background —
+     hard to read as a tappable button at a glance (reported: "แทบมองไม่รู้
+     เรื่อง" — "can barely make sense of it"). Given a clear cyan border +
+     glow instead so it reads as an action, not just another card. */
+  --card-color: #1c3444;
   cursor: pointer;
-  border: 0;
+  border: 2px solid var(--cyan);
+  box-shadow: 0 0 0 1px rgba(83, 229, 255, .15), 0 0 18px rgba(83, 229, 255, .35), 0 6px 16px rgba(0, 0, 0, .35);
   transition: transform .15s ease, box-shadow .15s ease;
 }
-.card-back:not(:disabled):hover { transform: translateY(-3px); box-shadow: 0 10px 22px rgba(83, 229, 255, .3); }
-.card-back:disabled { opacity: .45; cursor: not-allowed; }
+.card-back:not(:disabled):hover { transform: translateY(-3px); box-shadow: 0 0 0 1px rgba(83, 229, 255, .2), 0 0 26px rgba(83, 229, 255, .5), 0 10px 22px rgba(83, 229, 255, .3); }
+.card-back:disabled {
+  opacity: .4;
+  cursor: not-allowed;
+  border-color: rgba(213, 204, 255, .25);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, .35);
+}
 .card-back-mark { font: 800 .78rem/1 ui-sans-serif, system-ui; color: var(--cyan); letter-spacing: .04em; }
 
 /* ---- center piles ---- */
@@ -459,6 +469,9 @@ body.in-game .app { max-width: 760px; }
 /* ---- action bar + hand ---- */
 .action-bar { display: flex; gap: 10px; margin-bottom: 14px; }
 .action-btn { margin-top: 0; }
+
+#hand-label { font-weight: 700; color: var(--ink); transition: color .15s ease; }
+#hand-label.hand-label-waiting { color: var(--muted); font-weight: 400; }
 
 .hand-row {
   list-style: none;

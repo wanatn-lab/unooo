@@ -15,7 +15,7 @@ export async function createRoom(hostName) {
     })
     .single();
 
-  if (error) throw new Error("Could not create the room. Please try again.");
+  if (error) throw new Error("สร้างห้องไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
   return { roomId: data.room_id, code: data.code, playerId: data.player_id, accessToken };
 }
 
@@ -27,19 +27,19 @@ export async function joinRoom(code, playerName) {
 
   if (error) {
     if (error.message.includes("room_not_found")) {
-      throw new Error("This room code doesn't exist. Check the link or code and try again.");
+      throw new Error("ไม่พบรหัสห้องนี้ กรุณาตรวจสอบลิงก์หรือรหัสแล้วลองใหม่");
     }
     if (error.message.includes("room_full")) {
-      throw new Error("This room is full.");
+      throw new Error("ห้องนี้เต็มแล้ว");
     }
-    throw new Error("Could not join the room. Please try again.");
+    throw new Error("เข้าร่วมห้องไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
   }
   return { playerId: data.id, roomId: data.room_id, accessToken };
 }
 
 export async function getRoomByCode(code) {
   const { data, error } = await supabase.rpc("lookup_room", { p_code: code }).maybeSingle();
-  if (error) throw new Error("Could not look up the room.");
+  if (error) throw new Error("ค้นหาห้องไม่สำเร็จ");
   return data;
 }
 
@@ -48,7 +48,7 @@ export async function getPlayers(roomId) {
     p_room_id: roomId,
     p_access_token: getAccessToken(),
   });
-  if (error) throw new Error("Could not load the player list.");
+  if (error) throw new Error("โหลดรายชื่อผู้เล่นไม่สำเร็จ");
   return data ?? [];
 }
 

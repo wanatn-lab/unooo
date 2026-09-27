@@ -42,7 +42,7 @@ async function renderPlayers(roomId) {
     if (player.is_host) {
       const tag = document.createElement("span");
       tag.className = "host-tag";
-      tag.textContent = "HOST";
+      tag.textContent = "โฮสต์";
       li.appendChild(tag);
     }
 
@@ -58,20 +58,20 @@ async function renderPlayers(roomId) {
   if (startButton) {
     startButton.hidden = !isHost;
     startButton.disabled = players.length < 2 || startInProgress || gameStarted;
-    startButton.textContent = gameStarted ? "Game started" : "Start Game";
+    startButton.textContent = gameStarted ? "เริ่มเกมแล้ว" : "เริ่มเกม";
   }
   if (gameHint && !gameStarted) {
     gameHint.textContent = isHost
-      ? (players.length < 2 ? "Invite at least one player before starting." : "You're the host. Start when everyone's ready.")
-      : "Waiting for the host to start the game…";
+      ? (players.length < 2 ? "ชวนผู้เล่นอย่างน้อยอีก 1 คนก่อนเริ่มเกม" : "คุณเป็นโฮสต์ กดเริ่มได้เมื่อทุกคนพร้อม")
+      : "กำลังรอโฮสต์เริ่มเกม…";
   }
 
   const status = document.getElementById("lobby-status");
   if (status && !gameStarted) {
     status.textContent =
       players.length >= CONFIG.MAX_PLAYERS_PER_ROOM
-        ? "Room is full — ready to start"
-        : `${players.length} of ${CONFIG.MAX_PLAYERS_PER_ROOM} echoes online`;
+        ? "ห้องเต็มแล้ว — พร้อมเริ่มเกม"
+        : `ออนไลน์ ${players.length} จาก ${CONFIG.MAX_PLAYERS_PER_ROOM} คน`;
   }
 }
 
@@ -91,7 +91,7 @@ function beginGameSync(game) {
   const startButton = document.getElementById("btn-start-game");
   if (startButton) {
     startButton.disabled = true;
-    startButton.textContent = "Game started";
+    startButton.textContent = "เริ่มเกมแล้ว";
   }
 
   if (onGameStarted) onGameStarted(game);
@@ -117,13 +117,13 @@ export function initLobbyView(roomId, code, onStarted) {
   const gameHint = document.createElement("p");
   gameHint.id = "lobby-game-hint";
   gameHint.className = "hint";
-  gameHint.textContent = "Waiting for the host to start the game…";
+  gameHint.textContent = "กำลังรอโฮสต์เริ่มเกม…";
 
   const startButton = document.createElement("button");
   startButton.id = "btn-start-game";
   startButton.className = "btn btn-primary";
   startButton.type = "button";
-  startButton.textContent = "Start Game";
+  startButton.textContent = "เริ่มเกม";
   startButton.hidden = true;
   startButton.disabled = true;
 
@@ -140,7 +140,7 @@ export function initLobbyView(roomId, code, onStarted) {
   startButton.onclick = async () => {
     const session = getSession();
     if (!session?.playerId) {
-      feedback.textContent = "Your player session is missing. Leave and rejoin the room.";
+      feedback.textContent = "หาเซสชันผู้เล่นของคุณไม่เจอ กรุณาออกแล้วเข้าห้องใหม่";
       feedback.hidden = false;
       return;
     }
@@ -152,8 +152,8 @@ export function initLobbyView(roomId, code, onStarted) {
     try {
       const game = await startGame(roomId, session.playerId);
       beginGameSync(game);
-      gameHint.textContent = "Game started — synchronizing every player now.";
-      feedback.textContent = "Game started. Every seated player will detect and synchronize it automatically.";
+      gameHint.textContent = "เริ่มเกมแล้ว — กำลังซิงค์ผู้เล่นทุกคน";
+      feedback.textContent = "เริ่มเกมแล้ว ผู้เล่นทุกคนในห้องจะเข้าเกมโดยอัตโนมัติ";
       feedback.hidden = false;
     } catch (error) {
       feedback.textContent = error.message;
@@ -179,14 +179,14 @@ export function initLobbyView(roomId, code, onStarted) {
         beginGameSync(game);
         const feedback = document.getElementById("game-start-feedback");
         if (feedback) {
-          feedback.textContent = "The host started the game. State sync is active.";
+          feedback.textContent = "โฮสต์เริ่มเกมแล้ว กำลังซิงค์สถานะเกม";
           feedback.hidden = false;
         }
         void renderPlayers(roomId);
       },
       () => {
         const status = document.getElementById("lobby-status");
-        if (status && !gameStarted) status.textContent = "Reconnecting room state…";
+        if (status && !gameStarted) status.textContent = "กำลังเชื่อมต่อห้องใหม่…";
       },
     );
   }
@@ -196,7 +196,7 @@ export function initLobbyView(roomId, code, onStarted) {
     try {
       await navigator.clipboard.writeText(link);
     } catch {
-      window.prompt("Copy this link:", link);
+      window.prompt("คัดลอกลิงก์นี้:", link);
     }
     const feedback = document.getElementById("copy-feedback");
     feedback.hidden = false;

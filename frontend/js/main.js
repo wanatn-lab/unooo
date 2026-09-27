@@ -63,17 +63,17 @@ async function boot() {
     try {
       room = await getRoomByCode(urlCode);
     } catch {
-      showErrorView("Could not check this room right now. Please try again.");
+      showErrorView("ตรวจสอบห้องนี้ไม่สำเร็จตอนนี้ กรุณาลองใหม่อีกครั้ง");
       return;
     }
 
     if (!room) {
-      showErrorView("This room code doesn't exist. Check the link and try again.");
+      showErrorView("ไม่พบรหัสห้องนี้ กรุณาตรวจสอบลิงก์แล้วลองใหม่");
       return;
     }
 
     if (room.player_count >= (room.max_players || CONFIG.MAX_PLAYERS_PER_ROOM)) {
-      showErrorView(`This room is full (max ${room.max_players} players).`);
+      showErrorView(`ห้องนี้เต็มแล้ว (สูงสุด ${room.max_players} คน)`);
       return;
     }
   }

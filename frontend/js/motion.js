@@ -13,7 +13,7 @@
     document.body.classList.toggle("reduce-motion", reduced);
     if (btn) {
       btn.setAttribute("aria-pressed", String(reduced));
-      btn.textContent = reduced ? "Enable motion" : "Reduce motion";
+      btn.textContent = reduced ? "เปิดการเคลื่อนไหว" : "ลดการเคลื่อนไหว";
     }
   }
 

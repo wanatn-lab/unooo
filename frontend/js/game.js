@@ -26,7 +26,7 @@ import {
 import { subscribeToGameState } from "./gameSync.js";
 import { avatarFor } from "./avatars.js";
 
-const COLOR_LABEL = { red: "Red", yellow: "Yellow", green: "Green", blue: "Blue" };
+const COLOR_LABEL = { red: "แดง", yellow: "เหลือง", green: "เขียว", blue: "น้ำเงิน" };
 const VALUE_LABEL = { skip: "⦸", reverse: "⇄", draw2: "+2", wild: "★", wild4: "+4" };
 
 let unsubscribeGameState = null;
@@ -48,7 +48,7 @@ function cardColorClass(card) {
 
 function cardAriaLabel(card) {
   const value = card.value in VALUE_LABEL
-    ? { skip: "Skip", reverse: "Reverse", draw2: "Draw 2", wild: "Wild", wild4: "Wild Draw 4" }[card.value]
+    ? { skip: "ข้าม", reverse: "ย้อนกลับ", draw2: "จั่ว 2", wild: "ไวลด์ (เลือกสี)", wild4: "ไวลด์ จั่ว 4 (เลือกสี)" }[card.value]
     : card.value;
   return card.color === "wild" ? value : `${COLOR_LABEL[card.color] ?? card.color} ${value}`;
 }
@@ -90,7 +90,7 @@ function canAct() {
 }
 
 function playerName(playerId) {
-  return roster.get(playerId)?.name ?? "Player";
+  return roster.get(playerId)?.name ?? "ผู้เล่น";
 }
 
 function showToast(message) {
@@ -154,7 +154,7 @@ function confirmUnoCall() {
 
 async function handleHandCardClick(card) {
   if (!canAct()) {
-    showActionError("It's not your turn.");
+    showActionError("ยังไม่ถึงตาคุณ");
     return;
   }
 
@@ -195,8 +195,8 @@ async function handleDrawPile() {
     const me = myGamePlayer();
     if (me) me.hand_count = snapshot.hand.length;
     showToast(playable
-      ? `You drew ${cardAriaLabel(card)} — you can play it or pass.`
-      : `You drew ${cardAriaLabel(card)} — it doesn't match, so you'll need to pass.`);
+      ? `คุณจั่วได้ ${cardAriaLabel(card)} — เล่นใบนี้หรือกดข้ามตาก็ได้`
+      : `คุณจั่วได้ ${cardAriaLabel(card)} — ไพ่ใบนี้ลงไม่ได้ ต้องกดข้ามตา`);
     render();
   } catch (error) {
     showActionError(error.message);
@@ -218,7 +218,7 @@ async function handleCallUno() {
     const updated = await callUno(gameId, myPlayerId);
     const me = myGamePlayer();
     if (me) Object.assign(me, updated);
-    showToast("UNO called!");
+    showToast("ประกาศ UNO แล้ว!");
     render();
   } catch (error) {
     showActionError(error.message);
@@ -230,7 +230,7 @@ async function handleCatch(targetId) {
     const updated = await catchUnoFailure(gameId, myPlayerId, targetId);
     const target = snapshot.players.find((p) => p.player_id === targetId);
     if (target) Object.assign(target, updated);
-    showToast(`Caught ${playerName(targetId)} — they draw penalty cards.`);
+    showToast(`จับผิด ${playerName(targetId)} ได้ — โดนจั่วไพ่ลงโทษ`);
     render();
   } catch (error) {
     showActionError(error.message);
@@ -276,17 +276,17 @@ function renderOpponents() {
     badges.className = "opponent-badges";
     const handBadge = document.createElement("span");
     handBadge.className = "badge";
-    handBadge.textContent = player.hand_count === 1 ? "1 card" : `${player.hand_count} cards`;
+    handBadge.textContent = player.hand_count === 1 ? "เหลือ 1 ใบ" : `เหลือ ${player.hand_count} ใบ`;
     badges.appendChild(handBadge);
     if (player.is_bot) {
       const botBadge = document.createElement("span");
       botBadge.className = "badge badge-warn";
-      botBadge.textContent = "Bot";
+      botBadge.textContent = "บอท";
       badges.appendChild(botBadge);
     } else if (!player.connected) {
       const offBadge = document.createElement("span");
       offBadge.className = "badge badge-warn";
-      offBadge.textContent = "Away";
+      offBadge.textContent = "ไม่อยู่";
       badges.appendChild(offBadge);
     }
     if (player.said_uno) {
@@ -301,7 +301,7 @@ function renderOpponents() {
       const catchBtn = document.createElement("button");
       catchBtn.type = "button";
       catchBtn.className = "btn btn-secondary catch-btn";
-      catchBtn.textContent = "Catch!";
+      catchBtn.textContent = "จับผิด!";
       catchBtn.onclick = () => handleCatch(player.player_id);
       li.appendChild(catchBtn);
     }
@@ -315,11 +315,18 @@ function renderHand() {
   list.innerHTML = "";
   const active = canAct();
 
+  // Bug fix (2026-09-27, reported by real play-test video): this used to
+  // read `active && !playable`, so when it was NOT the player's turn every
+  // card stayed at full opacity — completely indistinguishable from "your
+  // turn, this card just doesn't match". The player had no visual reason to
+  // stop tapping cards during the opponent's turn. Dimming now depends only
+  // on `!playable` (which is already false whenever `!active`), so the
+  // whole hand visibly greys out the instant it isn't your turn.
   (snapshot.hand ?? []).forEach((card) => {
     const el = buildCardEl(card, { small: true });
     const playable = active && isPlayableClientSide(card);
     el.classList.toggle("is-playable", playable);
-    el.classList.toggle("is-dim", active && !playable);
+    el.classList.toggle("is-dim", !playable);
     el.setAttribute("role", "button");
     el.tabIndex = 0;
     el.onclick = () => handleHandCardClick(card);
@@ -331,6 +338,17 @@ function renderHand() {
     };
     list.appendChild(el);
   });
+
+  // A second, harder-to-miss cue right above the hand itself (the turn
+  // banner at the top of the screen is easy to miss while looking down at
+  // your own cards on a phone) — see index.html for the #hand-label element.
+  const label = document.getElementById("hand-label");
+  if (label) {
+    label.textContent = active
+      ? (snapshot.game.has_drawn_this_turn ? "มือของคุณ — เล่นได้หรือกดข้าม" : "มือของคุณ — ตาคุณ เลือกไพ่ได้เลย")
+      : `มือของคุณ — รอตาของ ${playerName(snapshot.game.turn_player_id)}`;
+    label.classList.toggle("hand-label-waiting", !active);
+  }
 }
 
 function renderCenter() {
@@ -350,7 +368,7 @@ function renderCenter() {
   const color = snapshot.game.current_color;
   chip.className = "color-chip";
   if (color) chip.classList.add(`swatch-${color}`);
-  document.getElementById("current-color-label").textContent = color ? COLOR_LABEL[color] : "Color";
+  document.getElementById("current-color-label").textContent = color ? COLOR_LABEL[color] : "สี";
 
   const drawBtn = document.getElementById("draw-pile");
   drawBtn.disabled = !canAct() || snapshot.game.has_drawn_this_turn;
@@ -362,15 +380,15 @@ function renderTurnBar() {
   const { game } = snapshot;
 
   if (game.status === "finished") {
-    turnEl.textContent = "Game over";
+    turnEl.textContent = "จบเกมแล้ว";
   } else if (game.turn_player_id === myPlayerId) {
-    turnEl.textContent = game.has_drawn_this_turn ? "Your turn — play or pass" : "Your turn!";
+    turnEl.textContent = game.has_drawn_this_turn ? "ตาคุณ — เล่นไพ่หรือกดข้ามตา" : "ตาคุณ!";
   } else {
-    turnEl.textContent = `${playerName(game.turn_player_id)}'s turn`;
+    turnEl.textContent = `ตาของ ${playerName(game.turn_player_id)}`;
   }
 
   dirEl.textContent = game.direction === 1 ? "↻" : "↺";
-  dirEl.setAttribute("aria-label", game.direction === 1 ? "Turn order: clockwise" : "Turn order: counter-clockwise");
+  dirEl.setAttribute("aria-label", game.direction === 1 ? "ลำดับการเล่น: ตามเข็มนาฬิกา" : "ลำดับการเล่น: ทวนเข็มนาฬิกา");
 }
 
 function renderActionBar() {
@@ -391,8 +409,8 @@ function renderGameOver() {
   overlay.hidden = false;
   const title = document.getElementById("game-over-title");
   title.textContent = snapshot.game.winner_id === myPlayerId
-    ? "You win! 🎉"
-    : `${playerName(snapshot.game.winner_id)} wins!`;
+    ? "คุณชนะ! 🎉"
+    : `${playerName(snapshot.game.winner_id)} ชนะ!`;
 
   // Nothing left to do once the game is over — stop polling.
   if (unsubscribeGameState) {
@@ -452,7 +470,7 @@ export async function initGameView(roomIdArg, code, initialGame) {
   }
 
   if (!myPlayerId) {
-    showActionError("Your player session is missing. Leave and rejoin the room.");
+    showActionError("หาเซสชันผู้เล่นของคุณไม่เจอ กรุณาออกแล้วเข้าห้องใหม่");
     return;
   }
 

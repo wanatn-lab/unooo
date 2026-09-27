@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="theme-color" content="#090715" />
 <title>UNO Table</title>
-<meta name="description" content="Create a room, share the link, and play UNO with friends." />
+<meta name="description" content="สร้างห้อง แชร์ลิงก์ แล้วเล่น UNO กับเพื่อน" />
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%23090715'/%3E%3Cpath d='M17 19h30v26H17z' fill='none' stroke='%2350e6ff' stroke-width='4'/%3E%3Cpath d='M24 32h16' stroke='%23ff54bd' stroke-width='4'/%3E%3C/svg%3E" />
 <link rel="stylesheet" href="css/style.css" />
 </head>
@@ -16,7 +16,7 @@
 
     <header class="topbar">
       <div class="brand"><span class="brand-mark" aria-hidden="true"></span>UNO TABLE</div>
-      <button class="quiet-button" id="motion-toggle" aria-pressed="false">Reduce motion</button>
+      <button class="quiet-button" id="motion-toggle" aria-pressed="false">ลดการเคลื่อนไหว</button>
     </header>
 
     <main class="app">
@@ -26,22 +26,22 @@
            when they land on the site with no room code in the URL. -->
       <section id="view-home" class="view">
         <h1>UNO Table</h1>
-        <p class="subtitle">Play UNO online with friends</p>
+        <p class="subtitle">เล่น UNO ออนไลน์กับเพื่อน</p>
 
         <div class="card">
-          <h2>Create a room</h2>
-          <label for="create-name">Your name</label>
-          <input id="create-name" type="text" maxlength="20" placeholder="e.g. Alex" />
-          <button id="btn-create-room" class="btn btn-primary">Create Room</button>
+          <h2>สร้างห้อง</h2>
+          <label for="create-name">ชื่อของคุณ</label>
+          <input id="create-name" type="text" maxlength="20" placeholder="เช่น Alex" />
+          <button id="btn-create-room" class="btn btn-primary">สร้างห้อง</button>
         </div>
 
         <div class="card">
-          <h2>Join a room</h2>
-          <label for="join-name">Your name</label>
-          <input id="join-name" type="text" maxlength="20" placeholder="e.g. Alex" />
-          <label for="join-code">Room code</label>
-          <input id="join-code" type="text" maxlength="6" placeholder="e.g. ABC123" autocapitalize="characters" />
-          <button id="btn-join-room" class="btn btn-secondary">Join Room</button>
+          <h2>เข้าร่วมห้อง</h2>
+          <label for="join-name">ชื่อของคุณ</label>
+          <input id="join-name" type="text" maxlength="20" placeholder="เช่น Alex" />
+          <label for="join-code">รหัสห้อง</label>
+          <input id="join-code" type="text" maxlength="6" placeholder="เช่น ABC123" autocapitalize="characters" />
+          <button id="btn-join-room" class="btn btn-secondary">เข้าร่วมห้อง</button>
         </div>
 
         <p id="home-error" class="error-message" hidden></p>
@@ -51,23 +51,23 @@
            Shown after creating or joining a room. Lists everyone currently
            in the room and updates live as people join. -->
       <section id="view-lobby" class="view" hidden>
-        <h1>Lobby</h1>
-        <div class="status"><span class="status-dot" aria-hidden="true"></span><span id="lobby-status">Waiting for players&hellip;</span></div>
+        <h1>ห้องรอ</h1>
+        <div class="status"><span class="status-dot" aria-hidden="true"></span><span id="lobby-status">กำลังรอผู้เล่น&hellip;</span></div>
 
         <div class="card">
-          <p class="label">Room code</p>
+          <p class="label">รหัสห้อง</p>
           <p id="lobby-code" class="room-code"></p>
-          <button id="btn-copy-link" class="btn btn-secondary">Copy invite link</button>
-          <p id="copy-feedback" class="hint" hidden>Link copied!</p>
+          <button id="btn-copy-link" class="btn btn-secondary">คัดลอกลิงก์เชิญ</button>
+          <p id="copy-feedback" class="hint" hidden>คัดลอกลิงก์แล้ว!</p>
         </div>
 
         <div class="card">
-          <p class="label"><span id="player-count">0</span>/<span id="player-max">8</span> players</p>
+          <p class="label"><span id="player-count">0</span>/<span id="player-max">8</span> ผู้เล่น</p>
           <ul id="player-list" class="player-list"></ul>
         </div>
 
-        <p class="hint">Waiting for the host to start the game&hellip;</p>
-        <button id="btn-leave-room" class="btn btn-text">Leave room</button>
+        <p class="hint">กำลังรอโฮสต์เริ่มเกม&hellip;</p>
+        <button id="btn-leave-room" class="btn btn-text">ออกจากห้อง</button>
       </section>
 
       <!-- ============================= GAME VIEW =============================
@@ -77,62 +77,62 @@
            js/gameApi.js + js/gameSync.js only (protected polling — see
            backend/README.md, Phase 3). -->
       <section id="view-game" class="view" hidden>
-        <p id="game-loading" class="hint">Loading table&hellip;</p>
+        <p id="game-loading" class="hint">กำลังโหลดโต๊ะ&hellip;</p>
 
         <div id="game-content" hidden>
-          <p id="game-reconnect-banner" class="status-banner status-banner-warn" hidden>Reconnecting…</p>
+          <p id="game-reconnect-banner" class="status-banner status-banner-warn" hidden>กำลังเชื่อมต่อใหม่…</p>
           <p id="game-bot-banner" class="status-banner status-banner-warn" hidden>
-            You went idle — a bot is playing your hand. Do anything below to take back control.
+            คุณไม่ได้ใช้งานสักพัก — บอทกำลังเล่นแทนคุณอยู่ ทำอะไรก็ได้ด้านล่างเพื่อควบคุมเกมกลับคืน
           </p>
           <p id="game-action-error" class="error-message" role="status" hidden></p>
           <p id="game-toast" class="status-banner" role="status" hidden></p>
 
           <div class="turn-bar">
-            <span id="turn-indicator" class="turn-indicator">Loading…</span>
-            <span id="direction-indicator" class="direction-indicator" title="Turn direction" aria-hidden="true"></span>
+            <span id="turn-indicator" class="turn-indicator">กำลังโหลด…</span>
+            <span id="direction-indicator" class="direction-indicator" title="ทิศทางการเล่น" aria-hidden="true"></span>
           </div>
 
-          <ul id="opponent-ring" class="opponent-ring" aria-label="Other players"></ul>
+          <ul id="opponent-ring" class="opponent-ring" aria-label="ผู้เล่นคนอื่น"></ul>
 
           <div class="table-center">
             <div class="pile-group">
-              <button id="draw-pile" class="playing-card card-back" type="button" aria-label="Draw a card">
+              <button id="draw-pile" class="playing-card card-back" type="button" aria-label="จั่วไพ่">
                 <span class="card-back-mark">UNO</span>
               </button>
-              <p class="pile-label">Draw</p>
+              <p class="pile-label">จั่วไพ่</p>
             </div>
             <div class="pile-group">
-              <div id="discard-pile" class="playing-card" aria-label="Discard pile"></div>
-              <p class="pile-label">Discard</p>
+              <div id="discard-pile" class="playing-card" aria-label="กองทิ้งไพ่"></div>
+              <p class="pile-label">กองทิ้ง</p>
             </div>
             <div class="pile-group">
               <span id="current-color-chip" class="color-chip" aria-hidden="true"></span>
-              <p class="pile-label" id="current-color-label">Color</p>
+              <p class="pile-label" id="current-color-label">สี</p>
             </div>
           </div>
 
           <div class="action-bar">
-            <button id="btn-pass-turn" class="btn btn-secondary action-btn" type="button" hidden>Pass turn</button>
-            <button id="btn-call-uno" class="btn btn-primary action-btn" type="button" hidden>Call UNO!</button>
+            <button id="btn-pass-turn" class="btn btn-secondary action-btn" type="button" hidden>กดข้ามตา</button>
+            <button id="btn-call-uno" class="btn btn-primary action-btn" type="button" hidden>ประกาศ UNO!</button>
           </div>
 
-          <p class="label">Your hand</p>
+          <p id="hand-label" class="label">มือของคุณ</p>
           <ul id="my-hand" class="hand-row"></ul>
 
-          <button id="btn-leave-game" class="btn btn-text">Leave table</button>
+          <button id="btn-leave-game" class="btn btn-text">ออกจากโต๊ะ</button>
         </div>
 
         <!-- Wild color picker — shown only when playing a Wild/Wild Draw 4 -->
         <div id="color-picker" class="modal-overlay" hidden>
           <div class="modal-card">
-            <h2>Pick a color</h2>
+            <h2>เลือกสี</h2>
             <div class="color-options">
-              <button class="color-option" data-color="red" style="--swatch: var(--uno-red)" type="button">Red</button>
-              <button class="color-option" data-color="yellow" style="--swatch: var(--uno-yellow)" type="button">Yellow</button>
-              <button class="color-option" data-color="green" style="--swatch: var(--uno-green)" type="button">Green</button>
-              <button class="color-option" data-color="blue" style="--swatch: var(--uno-blue)" type="button">Blue</button>
+              <button class="color-option" data-color="red" style="--swatch: var(--uno-red)" type="button">แดง</button>
+              <button class="color-option" data-color="yellow" style="--swatch: var(--uno-yellow)" type="button">เหลือง</button>
+              <button class="color-option" data-color="green" style="--swatch: var(--uno-green)" type="button">เขียว</button>
+              <button class="color-option" data-color="blue" style="--swatch: var(--uno-blue)" type="button">น้ำเงิน</button>
             </div>
-            <button id="color-picker-cancel" class="btn btn-text" type="button">Cancel</button>
+            <button id="color-picker-cancel" class="btn btn-text" type="button">ยกเลิก</button>
           </div>
         </div>
 
@@ -140,18 +140,18 @@
              you tapped would leave you with exactly one card. -->
         <div id="uno-confirm" class="modal-overlay" hidden>
           <div class="modal-card">
-            <h2>Call UNO?</h2>
-            <p class="hint">Playing this card leaves you with one card left.</p>
-            <button id="uno-confirm-yes" class="btn btn-primary" type="button">Play + Call UNO!</button>
-            <button id="uno-confirm-no" class="btn btn-secondary" type="button">Just play</button>
+            <h2>ประกาศ UNO ไหม?</h2>
+            <p class="hint">ลงไพ่ใบนี้แล้วคุณจะเหลือไพ่ใบเดียว</p>
+            <button id="uno-confirm-yes" class="btn btn-primary" type="button">ลง + ประกาศ UNO!</button>
+            <button id="uno-confirm-no" class="btn btn-secondary" type="button">ลงเฉยๆ</button>
           </div>
         </div>
 
         <!-- Game over overlay -->
         <div id="game-over" class="modal-overlay" hidden>
           <div class="modal-card">
-            <h2 id="game-over-title">Game over</h2>
-            <a href="/" class="btn btn-primary">Back to home</a>
+            <h2 id="game-over-title">จบเกม</h2>
+            <a href="/" class="btn btn-primary">กลับหน้าแรก</a>
           </div>
         </div>
       </section>
@@ -160,9 +160,9 @@
            Shown for a bad/expired room link, instead of a blank or stuck
            screen. Always offers a way back to the home page. -->
       <section id="view-error" class="view" hidden>
-        <h1>Something's not right</h1>
+        <h1>มีบางอย่างผิดพลาด</h1>
         <p id="error-message" class="error-message"></p>
-        <a href="/" class="btn btn-primary">Back to home</a>
+        <a href="/" class="btn btn-primary">กลับหน้าแรก</a>
       </section>
 
     </main>

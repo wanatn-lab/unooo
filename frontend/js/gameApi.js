@@ -27,15 +27,15 @@ export async function startGame(roomId, playerId) {
 
   if (error) {
     if (error.message.includes("only_host_can_start")) {
-      throw new Error("Only the host can start the game.");
+      throw new Error("มีแค่โฮสต์เท่านั้นที่เริ่มเกมได้");
     }
     if (error.message.includes("not_enough_players")) {
-      throw new Error("You need at least 2 players to start.");
+      throw new Error("ต้องมีผู้เล่นอย่างน้อย 2 คนถึงจะเริ่มเกมได้");
     }
     if (error.message.includes("room_not_in_lobby")) {
-      throw new Error("This room has already started or finished.");
+      throw new Error("ห้องนี้เริ่มเกมไปแล้วหรือจบไปแล้ว");
     }
-    throw new Error("Could not start the game. Please try again.");
+    throw new Error("เริ่มเกมไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
   }
   return data;
 }
@@ -51,7 +51,7 @@ export async function getRoomGame(roomId, playerId) {
     })
     .maybeSingle();
 
-  if (error) throw new Error("Could not check whether this room has started.");
+  if (error) throw new Error("ตรวจสอบสถานะห้องไม่สำเร็จ");
   return data;
 }
 
@@ -145,7 +145,7 @@ export async function getGame(gameId) {
   const { data, error } = await supabase
     .rpc("get_game_state", { p_game_id: gameId, p_access_token: getAccessToken() }).maybeSingle();
 
-  if (error) throw new Error("Could not load the game.");
+  if (error) throw new Error("โหลดข้อมูลเกมไม่สำเร็จ");
   return data;
 }
 
@@ -154,7 +154,7 @@ export async function getGamePlayers(gameId) {
   const { data, error } = await supabase
     .rpc("get_game_players", { p_game_id: gameId, p_access_token: getAccessToken() });
 
-  if (error) throw new Error("Could not load the players.");
+  if (error) throw new Error("โหลดข้อมูลผู้เล่นไม่สำเร็จ");
   return data;
 }
 
@@ -166,30 +166,30 @@ export async function getHand(gameId, playerId) {
       p_access_token: getAccessToken(),
   });
 
-  if (error) throw new Error("Could not load your hand.");
+  if (error) throw new Error("โหลดไพ่ในมือไม่สำเร็จ");
   return data ?? [];
 }
 
 /** Human-readable text for every error code the Phase 2 RPCs can raise. */
 function mapGameError(message) {
   const known = {
-    not_your_turn: "It's not your turn.",
-    card_not_in_hand: "You don't have that card.",
-    invalid_move: "That card doesn't match — pick a card that matches the color, number, or symbol, or play a Wild.",
-    game_not_in_progress: "This game isn't in progress.",
-    game_not_found: "That game doesn't exist.",
-    player_is_bot_controlled: "You've been disconnected — a bot is currently playing your hand.",
-    chosen_color_required: "Pick a color for that card first.",
-    already_drawn_this_turn: "You've already drawn this turn.",
-    must_draw_before_passing: "Draw a card before passing your turn.",
-    uno_only_valid_with_one_card: "You can only call UNO when you have exactly one card left.",
-    no_uno_violation: "That player doesn't have an uncalled UNO right now.",
-    uno_call_window_expired: "Too late — the UNO call-out window has passed.",
-    cannot_catch_self: "You can't catch yourself.",
-    player_not_in_game: "That player isn't in this game.",
+    not_your_turn: "ยังไม่ถึงตาคุณ",
+    card_not_in_hand: "คุณไม่มีไพ่ใบนี้",
+    invalid_move: "ไพ่ใบนี้ลงไม่ได้ — เลือกไพ่ที่มีสี ตัวเลข หรือสัญลักษณ์ตรงกัน หรือใช้ไพ่ไวลด์",
+    game_not_in_progress: "เกมนี้ยังไม่ได้เริ่มหรือจบไปแล้ว",
+    game_not_found: "ไม่พบเกมนี้",
+    player_is_bot_controlled: "คุณหลุดการเชื่อมต่อ — ตอนนี้บอทกำลังเล่นแทนคุณอยู่",
+    chosen_color_required: "กรุณาเลือกสีให้ไพ่ใบนี้ก่อน",
+    already_drawn_this_turn: "คุณจั่วไพ่ไปแล้วในตานี้",
+    must_draw_before_passing: "จั่วไพ่ก่อนถึงจะกดข้ามตาได้",
+    uno_only_valid_with_one_card: "ประกาศ UNO ได้ตอนเหลือไพ่ใบเดียวเท่านั้น",
+    no_uno_violation: "ผู้เล่นคนนี้ไม่ได้ค้างประกาศ UNO อยู่",
+    uno_call_window_expired: "ช้าไปแล้ว — หมดเวลาจับผิดการไม่ประกาศ UNO",
+    cannot_catch_self: "จับผิดตัวเองไม่ได้",
+    player_not_in_game: "ผู้เล่นคนนี้ไม่ได้อยู่ในเกมนี้",
   };
   for (const [code, friendly] of Object.entries(known)) {
     if (message.includes(code)) return friendly;
   }
-  return "Something went wrong with that action. Please try again.";
+  return "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง";
 }

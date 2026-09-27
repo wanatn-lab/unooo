@@ -30,7 +30,7 @@ export function initHomeView(onEnterRoom, prefillCode) {
   document.getElementById("btn-create-room").addEventListener("click", async () => {
     clearError();
     const name = document.getElementById("create-name").value.trim();
-    if (!name) return showError("Please enter your name.");
+    if (!name) return showError("กรุณากรอกชื่อของคุณ");
 
     try {
       const { roomId, code, playerId, accessToken } = await createRoom(name);
@@ -46,8 +46,8 @@ export function initHomeView(onEnterRoom, prefillCode) {
     const name = document.getElementById("join-name").value.trim();
     const code = joinCodeInput.value.trim().toUpperCase();
 
-    if (!name) return showError("Please enter your name.");
-    if (!/^[A-Z0-9]{6}$/.test(code)) return showError("Room codes are 6 characters, e.g. ABC123.");
+    if (!name) return showError("กรุณากรอกชื่อของคุณ");
+    if (!/^[A-Z0-9]{6}$/.test(code)) return showError("รหัสห้องมี 6 ตัวอักษร เช่น ABC123");
 
     try {
       const { roomId, playerId, accessToken } = await joinRoom(code, name);
