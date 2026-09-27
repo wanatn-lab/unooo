@@ -393,8 +393,14 @@ body.in-game .app { max-width: 760px; }
   font-weight: 700;
 }
 
-/* ---- cards ---- */
-.card {
+/* ---- cards ----
+   Named .playing-card (not .card) on purpose: .card is already used above
+   for the plain UI container boxes on the Home/Lobby views ("Create a
+   room", "Join a room", room-code card, etc). Reusing .card here used to
+   override that container style everywhere (last rule in the file wins),
+   collapsing every home/lobby card into a tiny 68x96 box — this is that
+   fix. */
+.playing-card {
   --card-color: var(--muted);
   position: relative;
   display: flex;
@@ -515,7 +521,7 @@ body.in-game .app { max-width: 760px; }
 .color-option:hover { transform: scale(1.04); }
 
 @media (max-width: 380px) {
-  .card { width: 58px; height: 82px; }
+  .playing-card { width: 58px; height: 82px; }
   .card-value { font-size: 1.1rem; }
   .opponent-tile { flex-basis: 110px; }
 }

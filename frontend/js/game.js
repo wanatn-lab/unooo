@@ -55,7 +55,7 @@ function cardAriaLabel(card) {
 
 function buildCardEl(card, { small = false } = {}) {
   const el = document.createElement(small ? "li" : "div");
-  el.className = `card ${cardColorClass(card)}${small ? " hand-card" : ""}`;
+  el.className = `playing-card ${cardColorClass(card)}${small ? " hand-card" : ""}`;
   el.setAttribute("aria-label", cardAriaLabel(card));
   const value = document.createElement("span");
   value.className = "card-value";
@@ -337,7 +337,7 @@ function renderCenter() {
   const top = topDiscard();
   const discardEl = document.getElementById("discard-pile");
   discardEl.innerHTML = "";
-  discardEl.className = "card";
+  discardEl.className = "playing-card";
   if (top) {
     discardEl.classList.add(cardColorClass(top));
     const value = document.createElement("span");
